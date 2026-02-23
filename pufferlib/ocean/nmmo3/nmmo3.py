@@ -6,19 +6,38 @@ import pettingzoo
 import time
 
 from pufferlib.ocean.nmmo3 import binding
-#import binding
+# import binding
 
 import pufferlib
 
+
 class NMMO3(pufferlib.PufferEnv):
-    def __init__(self, width=8*[512], height=8*[512], num_envs=4,
-            num_players=1024, num_enemies=2048, num_resources=2048,
-            num_weapons=1024, num_gems=512, tiers=5, levels=40,
-            teleportitis_prob=0.001, enemy_respawn_ticks=2,
-            item_respawn_ticks=100, x_window=7, y_window=5,
-            reward_combat_level=1.0, reward_prof_level=1.0,
-            reward_item_level=0.5, reward_market=0.01,
-            reward_death=-1.0, log_interval=128, buf=None, seed=0):
+    def __init__(
+        self,
+        width=8 * [512],
+        height=8 * [512],
+        num_envs=4,
+        num_players=1024,
+        num_enemies=2048,
+        num_resources=2048,
+        num_weapons=1024,
+        num_gems=512,
+        tiers=5,
+        levels=40,
+        teleportitis_prob=0.001,
+        enemy_respawn_ticks=2,
+        item_respawn_ticks=100,
+        x_window=7,
+        y_window=5,
+        reward_combat_level=1.0,
+        reward_prof_level=1.0,
+        reward_item_level=0.5,
+        reward_market=0.01,
+        reward_death=-1.0,
+        log_interval=128,
+        buf=None,
+        seed=0,
+    ):
 
         self.log_interval = log_interval
 
@@ -122,13 +141,13 @@ class NMMO3(pufferlib.PufferEnv):
             total_players += num_players[idx]
             total_enemies += num_enemies[idx]
 
-        self.players_flat = np.zeros((total_players, 51+501+3), dtype=np.intc)
-        self.enemies_flat = np.zeros((total_enemies, 51+501+3), dtype=np.intc)
+        self.players_flat = np.zeros((total_players, 51 + 501 + 3), dtype=np.intc)
+        self.enemies_flat = np.zeros((total_enemies, 51 + 501 + 3), dtype=np.intc)
         self.rewards_flat = np.zeros((total_players, 10), dtype=np.float32)
-        #map_obs = np.zeros((total_players, 11*15 + 47 + 10), dtype=np.intc)
-        #counts = np.zeros((num_envs, height, width), dtype=np.uint8)
-        #terrain = np.zeros((num_envs, height, width), dtype=np.uint8)
-        #rendered = np.zeros((num_envs, height, width, 3), dtype=np.uint8)
+        # map_obs = np.zeros((total_players, 11*15 + 47 + 10), dtype=np.intc)
+        # counts = np.zeros((num_envs, height, width), dtype=np.uint8)
+        # terrain = np.zeros((num_envs, height, width), dtype=np.uint8)
+        # rendered = np.zeros((num_envs, height, width, 3), dtype=np.uint8)
         actions = np.zeros((total_players), dtype=np.intc)
         self.actions = actions
 
@@ -140,8 +159,9 @@ class NMMO3(pufferlib.PufferEnv):
         self.prof_goal_mask = np.array([0, 0, 0, 1, 0, 0, 1, 1, 1, 1])
         self.tick = 0
 
-        self.single_observation_space = gymnasium.spaces.Box(low=0,
-            high=255, shape=(11*15*10+47+10,), dtype=np.uint8)
+        self.single_observation_space = gymnasium.spaces.Box(
+            low=0, high=255, shape=(11 * 15 * 10 + 47 + 10,), dtype=np.uint8
+        )
         self.single_action_space = gymnasium.spaces.Discrete(26)
         self.render_mode = 'human'
 
@@ -153,12 +173,12 @@ class NMMO3(pufferlib.PufferEnv):
             players = num_players[i]
             enemies = num_enemies[i]
             env_id = binding.env_init(
-                self.observations[player_count:player_count+players],
-                self.actions[player_count:player_count+players],
-                self.rewards[player_count:player_count+players],
-                self.terminals[player_count:player_count+players],
-                self.truncations[player_count:player_count+players],
-                i + seed*num_envs,
+                self.observations[player_count : player_count + players],
+                self.actions[player_count : player_count + players],
+                self.rewards[player_count : player_count + players],
+                self.terminals[player_count : player_count + players],
+                self.truncations[player_count : player_count + players],
+                i + seed * num_envs,
                 width=width[i],
                 height=height[i],
                 num_players=num_players[i],
@@ -212,6 +232,7 @@ class NMMO3(pufferlib.PufferEnv):
     def close(self):
         binding.vec_close(self.c_envs)
 
+
 def test_performance(cls, timeout=10, atn_cache=1024):
     env = cls(num_envs=1)
     env.reset()
@@ -220,13 +241,17 @@ def test_performance(cls, timeout=10, atn_cache=1024):
     actions = np.random.randint(0, 2, (atn_cache, env.num_agents))
 
     import time
+
     start = time.time()
     while time.time() - start < timeout:
         atn = actions[tick % atn_cache]
         env.step(atn)
         tick += 1
 
-    print(f'{env.__class__.__name__}: SPS: {env.num_agents * tick / (time.time() - start)}')
+    print(
+        f'{env.__class__.__name__}: SPS: {env.num_agents * tick / (time.time() - start)}'
+    )
+
 
 if __name__ == '__main__':
     test_performance(NMMO3)

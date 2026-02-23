@@ -1,6 +1,6 @@
-'''Pure python version of Squared, a simple single-agent sample environment.
-   Use this as a template for your own envs.
-'''
+"""Pure python version of Squared, a simple single-agent sample environment.
+Use this as a template for your own envs.
+"""
 
 # We only use Gymnasium for their spaces API for compatibility with other libraries.
 import gymnasium
@@ -18,13 +18,15 @@ EMPTY = 0
 AGENT = 1
 TARGET = 2
 
+
 # Inherit from PufferEnv
 class PySquared(pufferlib.PufferEnv):
     # Required keyword arguments: render_mode, buf, seed
     def __init__(self, render_mode='ansi', size=11, buf=None, seed=0):
         # Required attributes below
-        self.single_observation_space = gymnasium.spaces.Box(low=0, high=1,
-            shape=(size*size,), dtype=np.uint8)
+        self.single_observation_space = gymnasium.spaces.Box(
+            low=0, high=1, shape=(size * size,), dtype=np.uint8
+        )
         self.single_action_space = gymnasium.spaces.Discrete(5)
         self.render_mode = render_mode
         self.num_agents = 1
@@ -38,14 +40,14 @@ class PySquared(pufferlib.PufferEnv):
     # All methods below are required with the signatures shown
     def reset(self, seed=0):
         self.observations[0, :] = EMPTY
-        self.observations[0, self.size*self.size//2] = AGENT
-        self.r = self.size//2
-        self.c = self.size//2
+        self.observations[0, self.size * self.size // 2] = AGENT
+        self.r = self.size // 2
+        self.c = self.size // 2
         self.tick = 0
         while True:
             target_r, target_c = np.random.randint(0, self.size, 2)
             if target_r != self.r or target_c != self.c:
-                self.observations[0, target_r*self.size + target_c] = TARGET
+                self.observations[0, target_r * self.size + target_c] = TARGET
                 break
 
         # Observations are read from self. Don't create extra copies
@@ -58,7 +60,7 @@ class PySquared(pufferlib.PufferEnv):
         self.terminals[0] = False
         self.rewards[0] = 0
 
-        self.observations[0, self.r*self.size + self.c] = EMPTY
+        self.observations[0, self.r * self.size + self.c] = EMPTY
 
         if atn == DOWN:
             self.r += 1
@@ -71,12 +73,14 @@ class PySquared(pufferlib.PufferEnv):
 
         # Info is a list of dictionaries
         info = []
-        pos = self.r*self.size + self.c
-        if (self.tick > 3*self.size
-                or self.r < 0
-                or self.c < 0
-                or self.r >= self.size
-                or self.c >= self.size):
+        pos = self.r * self.size + self.c
+        if (
+            self.tick > 3 * self.size
+            or self.r < 0
+            or self.c < 0
+            or self.r >= self.size
+            or self.c >= self.size
+        ):
             self.terminals[0] = True
             self.rewards[0] = -1.0
             info = [{'reward': -1.0}]
@@ -114,6 +118,7 @@ class PySquared(pufferlib.PufferEnv):
     def close(self):
         pass
 
+
 if __name__ == '__main__':
     env = PySquared()
     env.reset()
@@ -123,6 +128,7 @@ if __name__ == '__main__':
     actions = np.random.randint(0, 5, (CACHE, 1))
 
     import time
+
     start = time.time()
     while time.time() - start < 10:
         env.step(actions[steps % CACHE])

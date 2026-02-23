@@ -36,30 +36,30 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-#import render_utils
+# import render_utils
 
-SMALL_FONT_PATH = os.path.join(__package__.replace(".", "/"), "Hack-Regular.ttf")
+SMALL_FONT_PATH = os.path.join(__package__.replace('.', '/'), 'Hack-Regular.ttf')
 
 # Mapping of 0-15 colors used.
 # Taken from bottom image here. It seems about right
 # https://i.stack.imgur.com/UQVe5.png
 COLORS = [
-    "#000000",
-    "#800000",
-    "#008000",
-    "#808000",
-    "#000080",
-    "#800080",
-    "#008080",
-    "#808080",  # - flipped these ones around
-    "#C0C0C0",  # | the gray-out dull stuff
-    "#FF0000",
-    "#00FF00",
-    "#FFFF00",
-    "#0000FF",
-    "#FF00FF",
-    "#00FFFF",
-    "#FFFFFF",
+    '#000000',
+    '#800000',
+    '#008000',
+    '#808000',
+    '#000080',
+    '#800080',
+    '#008080',
+    '#808080',  # - flipped these ones around
+    '#C0C0C0',  # | the gray-out dull stuff
+    '#FF0000',
+    '#00FF00',
+    '#FFFF00',
+    '#0000FF',
+    '#FF00FF',
+    '#00FFFF',
+    '#FFFFFF',
 ]
 
 
@@ -106,8 +106,8 @@ def _initialize_char_array(font_size, rescale_font_size):
     Returns a np array of (num_chars, num_colors, char_height, char_width, 3)
     """
     font = ImageFont.truetype(SMALL_FONT_PATH, font_size)
-    dummy_text = "".join(
-        [(chr(i) if chr(i).isprintable() else " ") for i in range(256)]
+    dummy_text = ''.join(
+        [(chr(i) if chr(i).isprintable() else ' ') for i in range(256)]
     )
     _, _, image_width, image_height = font.getbbox(dummy_text)
     # Above can not be trusted (or its siblings)....
@@ -117,7 +117,7 @@ def _initialize_char_array(font_size, rescale_font_size):
     char_height = rescale_font_size[1]
 
     char_array = np.zeros((256, 16, char_height, char_width, 3), dtype=np.uint8)
-    image = Image.new("RGB", (image_width, image_height))
+    image = Image.new('RGB', (image_width, image_height))
     image_draw = ImageDraw.Draw(image)
     for color_index in range(16):
         image_draw.rectangle((0, 0, image_width, image_height), fill=(0, 0, 0))
@@ -171,8 +171,8 @@ class RenderCharImagesWithNumpyWrapper(gym.Wrapper):
         self.observation_space = gym.spaces.Box(
             low=0, high=255, shape=self.chw_image_shape, dtype=np.uint8
         )
- 
-        '''
+
+        """
         obs_spaces = {
             "screen_image": gym.spaces.Box(
                 low=0, high=255, shape=self.chw_image_shape, dtype=np.uint8
@@ -186,21 +186,21 @@ class RenderCharImagesWithNumpyWrapper(gym.Wrapper):
             ]
         )
         self.observation_space = gym.spaces.Dict(obs_spaces)
-        '''
+        """
 
         self.render_mode = 'rgb_array'
 
     def _render_text_to_image(self, obs):
-        chars = obs["tty_chars"]
-        colors = obs["tty_colors"]
+        chars = obs['tty_chars']
+        colors = obs['tty_colors']
         offset_w = 0
         offset_h = 0
         if self.crop_size:
             # Center around player
             if self.blstats_cursor:
-                center_x, center_y = obs["blstats"][:2]
+                center_x, center_y = obs['blstats'][:2]
             else:
-                center_y, center_x = obs["tty_cursor"]
+                center_y, center_x = obs['tty_cursor']
             offset_h = center_y - self.half_crop_size
             offset_w = center_x - self.half_crop_size
 
@@ -218,9 +218,9 @@ class RenderCharImagesWithNumpyWrapper(gym.Wrapper):
         )
 
         return out_image
-        obs["screen_image"] = out_image
-        del obs["tty_chars"]
-        del obs["tty_colors"]
+        obs['screen_image'] = out_image
+        del obs['tty_chars']
+        del obs['tty_colors']
         return obs
 
     def step(self, action):
@@ -270,7 +270,7 @@ class RenderCharImagesWithNumpyWrapperV2(gym.Wrapper):
         )
 
         obs_spaces = {
-            "screen_image": gym.spaces.Box(
+            'screen_image': gym.spaces.Box(
                 low=0, high=255, shape=self.chw_image_shape, dtype=np.uint8
             )
         }
@@ -278,22 +278,22 @@ class RenderCharImagesWithNumpyWrapperV2(gym.Wrapper):
             [
                 (k, self.env.observation_space[k])
                 for k in self.env.observation_space
-                if k not in ["tty_chars", "tty_colors"]
+                if k not in ['tty_chars', 'tty_colors']
             ]
         )
         self.observation_space = gym.spaces.Dict(obs_spaces)
 
     def _populate_obs(self, obs):
-        screen = np.zeros(self.chw_image_shape, order="C", dtype=np.uint8)
+        screen = np.zeros(self.chw_image_shape, order='C', dtype=np.uint8)
         render_utils.render_crop(
-            obs["tty_chars"],
-            obs["tty_colors"],
-            obs["tty_cursor"],
+            obs['tty_chars'],
+            obs['tty_colors'],
+            obs['tty_cursor'],
             self.char_array,
             screen,
             crop_size=self.crop_size,
         )
-        obs["screen_image"] = screen
+        obs['screen_image'] = screen
 
     def step(self, action):
         obs, reward, done, info = self.env.step(action)

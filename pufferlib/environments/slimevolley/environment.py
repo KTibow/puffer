@@ -15,11 +15,13 @@ import pufferlib.postprocess
 def env_creator(name='SlimeVolley-v0'):
     return functools.partial(make, name)
 
+
 def make(name, render_mode='rgb_array', buf=None):
     if name == 'slimevolley':
         name = 'SlimeVolley-v0'
 
     from slimevolleygym import SlimeVolleyEnv
+
     SlimeVolleyEnv.atari_mode = True
     env = SlimeVolleyEnv()
     env.policy.predict = lambda obs: np.random.randint(0, 2, 3)
@@ -29,10 +31,11 @@ def make(name, render_mode='rgb_array', buf=None):
     env = pufferlib.postprocess.EpisodeStats(env)
     return pufferlib.emulation.GymnasiumPufferEnv(env=env, buf=buf)
 
+
 class SlimeVolleyMultiDiscrete(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
-        #self.action_space = gym.spaces.MultiDiscrete(
+        # self.action_space = gym.spaces.MultiDiscrete(
         #    [2 for _ in range(env.action_space.n)])
 
     def reset(self, seed=None):
@@ -42,11 +45,13 @@ class SlimeVolleyMultiDiscrete(gym.Wrapper):
         obs, reward, done, info = self.env.step(action)
         return obs.astype(np.float32), reward, done, info
 
+
 class SkipWrapper(gym.Wrapper):
     """
-        Generic common frame skipping wrapper
-        Will perform action for `x` additional steps
+    Generic common frame skipping wrapper
+    Will perform action for `x` additional steps
     """
+
     def __init__(self, env, repeat_count):
         super(SkipWrapper, self).__init__(env)
         self.repeat_count = repeat_count
@@ -67,4 +72,3 @@ class SkipWrapper(gym.Wrapper):
     def reset(self):
         self.stepcount = 0
         return self.env.reset()
-

@@ -12,8 +12,9 @@ import pufferlib.postprocess
 def env_creator(name='nmmo'):
     return functools.partial(make, name)
 
+
 def make(name, *args, buf=None, **kwargs):
-    '''Neural MMO creation function'''
+    """Neural MMO creation function"""
     nmmo = pufferlib.environments.try_import('nmmo')
     env = nmmo.Env(*args, **kwargs)
     env = NMMOWrapper(env)
@@ -21,14 +22,16 @@ def make(name, *args, buf=None, **kwargs):
     env = pufferlib.postprocess.MeanOverAgents(env)
     return pufferlib.emulation.PettingZooPufferEnv(env=env, buf=buf)
 
+
 class NMMOWrapper(pufferlib.postprocess.PettingZooWrapper):
-    '''Remove task spam'''
+    """Remove task spam"""
+
     @property
     def render_mode(self):
         return 'rgb_array'
-    
+
     def render(self):
-        '''Quick little renderer for NMMO'''
+        """Quick little renderer for NMMO"""
         tiles = self.env.tile_map[:, :, 2].astype(np.uint8)
         render = np.zeros((tiles.shape[0], tiles.shape[1], 3), dtype=np.uint8)
         BROWN = (136, 69, 19)
@@ -73,5 +76,3 @@ class NMMOWrapper(pufferlib.postprocess.PettingZooWrapper):
 
     def close(self):
         return self.env.close()
-
-    

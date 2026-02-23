@@ -6,7 +6,7 @@ import time
 
 
 class Bandit(gymnasium.Env):
-    '''Pufferlib Bandit environment
+    """Pufferlib Bandit environment
 
     Simulates a classic multiarmed bandit problem.
 
@@ -17,17 +17,18 @@ class Bandit(gymnasium.Env):
         reward_scale: The scale of the reward
         reward_noise: The standard deviation of the reward signal
         hard_fixed_seed: All instances of the environment should share the same seed.
-    '''
-    def __init__(self, num_actions=4, reward_scale=1,
-            reward_noise=0, hard_fixed_seed=42):
+    """
+
+    def __init__(
+        self, num_actions=4, reward_scale=1, reward_noise=0, hard_fixed_seed=42
+    ):
         self.num_actions = num_actions
         self.reward_scale = reward_scale
         self.reward_noise = reward_noise
         self.hard_fixed_seed = hard_fixed_seed
-        self.observation=np.ones(1, dtype=np.float32)
-        self.observation_space=gymnasium.spaces.Box(
-            low=-1, high=1, shape=(1,))
-        self.action_space=gymnasium.spaces.Discrete(num_actions)
+        self.observation = np.ones(1, dtype=np.float32)
+        self.observation_space = gymnasium.spaces.Box(low=-1, high=1, shape=(1,))
+        self.action_space = gymnasium.spaces.Discrete(num_actions)
         self.render_mode = 'ansi'
 
     def reset(self, seed=None):
@@ -61,8 +62,9 @@ class Bandit(gymnasium.Env):
 
         return self.observation, reward, True, False, {'score': correct}
 
+
 class Memory(gymnasium.Env):
-    '''Pufferlib Memory environment
+    """Pufferlib Memory environment
 
     Repeat the observed sequence after a delay. It is randomly generated upon every reset. This is a test of memory length and capacity. It starts requiring credit assignment if you make the sequence too long.
 
@@ -74,14 +76,14 @@ class Memory(gymnasium.Env):
     Args:
         mem_length: The length of the sequence
         mem_delay: The number of 0s between the sequence and the agent's response
-    '''
+    """
+
     def __init__(self, mem_length=1, mem_delay=0):
         self.mem_length = mem_length
         self.mem_delay = mem_delay
         self.horizon = 2 * mem_length + mem_delay
-        self.observation_space=gymnasium.spaces.Box(
-            low=-1, high=1, shape=(1,))
-        self.action_space=gymnasium.spaces.Discrete(2)
+        self.observation_space = gymnasium.spaces.Box(low=-1, high=1, shape=(1,))
+        self.action_space = gymnasium.spaces.Discrete(2)
         self.render_mode = 'ansi'
 
     def reset(self, seed=None):
@@ -90,7 +92,7 @@ class Memory(gymnasium.Env):
             np.random.seed(seed)
 
         self.solution = np.random.randint(0, 2, size=self.horizon).astype(np.float32)
-        self.solution[-(self.mem_length + self.mem_delay):] = -1
+        self.solution[-(self.mem_length + self.mem_delay) :] = -1
         self.submission = np.zeros(self.horizon) - 1
         self.tick = 1
 
@@ -118,7 +120,8 @@ class Memory(gymnasium.Env):
         info = {}
         if terminal:
             info['score'] = np.all(
-                self.solution[:self.mem_length] == self.submission[-self.mem_length:])
+                self.solution[: self.mem_length] == self.submission[-self.mem_length :]
+            )
 
         return ob, reward, terminal, False, info
 
@@ -147,13 +150,14 @@ class Memory(gymnasium.Env):
 
 
 class Multiagent(pettingzoo.ParallelEnv):
-    '''Pufferlib Multiagent environment
+    """Pufferlib Multiagent environment
 
     Agent 1 must pick action 0 and Agent 2 must pick action 1
 
     Observation space: Box(0, 1, (1,)). 0 for Agent 1 and 1 for Agent 2
     Action space: Discrete(2). Which action to take.
-    '''
+    """
+
     def __init__(self):
         self.observation = {
             1: np.zeros(1, dtype=np.float32),
@@ -167,20 +171,19 @@ class Multiagent(pettingzoo.ParallelEnv):
             1: False,
             2: False,
         }
-        self.possible_agents=[1, 2]
-        self.agents=[1, 2]
+        self.possible_agents = [1, 2]
+        self.agents = [1, 2]
         self.render_mode = 'ansi'
 
     def observation_space(self, agent):
-        return gymnasium.spaces.Box(
-            low=0, high=1, shape=(1,))
+        return gymnasium.spaces.Box(low=0, high=1, shape=(1,))
 
     def action_space(self, agent):
         return gymnasium.spaces.Discrete(2)
 
     def reset(self, seed=None):
         # Reallocating is faster than zeroing
-        self.view=np.zeros((2, 5), dtype=np.float32)
+        self.view = np.zeros((2, 5), dtype=np.float32)
         return self.observation, {}
 
     def step(self, action):
@@ -225,12 +228,13 @@ class Multiagent(pettingzoo.ParallelEnv):
             chars.append('\n')
         return ''.join(chars)
 
+
 class Password(gymnasium.Env):
-    '''Pufferlib Password environment
+    """Pufferlib Password environment
 
     Guess the password, which is a static binary string. Your policy has to
     not determinize before it happens to get the reward, and it also has to
-    latch onto the reward within a few instances of getting it. 
+    latch onto the reward within a few instances of getting it.
 
     Observation space: Box(0, 1, (password_length,)). A binary vector containing your guesses so far, so that the environment will be solvable without memory.
     Action space: Discrete(2). Your guess for the next digit.
@@ -238,14 +242,15 @@ class Password(gymnasium.Env):
     Args:
         password_length: The number of binary digits in the password.
         hard_fixed_seed: A fixed seed for the environment. It should be the same for all instances. This environment does not make sense when randomly generated.
-    '''
- 
+    """
+
     def __init__(self, password_length=5, hard_fixed_seed=42):
         self.password_length = password_length
         self.hard_fixed_seed = hard_fixed_seed
-        self.observation_space=gymnasium.spaces.Box(
-            low=-1, high=1, shape=(password_length,))
-        self.action_space=gymnasium.spaces.Discrete(2)
+        self.observation_space = gymnasium.spaces.Box(
+            low=-1, high=1, shape=(password_length,)
+        )
+        self.action_space = gymnasium.spaces.Discrete(2)
         self.render_mode = 'ansi'
 
     def reset(self, seed=None):
@@ -257,8 +262,9 @@ class Password(gymnasium.Env):
             np.random.seed(seed)
 
         self.observation = np.zeros(self.password_length, dtype=np.float32) - 1
-        self.solution = np.random.randint(
-            0, 2, size=self.password_length).astype(np.float32)
+        self.solution = np.random.randint(0, 2, size=self.password_length).astype(
+            np.float32
+        )
         self.tick = 0
 
         return self.observation, {}
@@ -303,13 +309,13 @@ class Password(gymnasium.Env):
 
         return ''.join(chars)
 
+
 class Performance(gymnasium.Env):
     def __init__(self, delay_mean=0, delay_std=0, bandwidth=1):
         np.random.seed(time.time_ns() % 2**32)
 
         self.observation_space = gymnasium.spaces.Box(
-            low=-2**20, high=2**20,
-            shape=(bandwidth,), dtype=np.float32
+            low=-(2**20), high=2**20, shape=(bandwidth,), dtype=np.float32
         )
         self.action_space = gymnasium.spaces.Discrete(2)
         self.observation = self.observation_space.sample()
@@ -321,19 +327,19 @@ class Performance(gymnasium.Env):
     def step(self, action):
         start = time.process_time()
         idx = 0
-        target_time = self.delay_mean + self.delay_std*np.random.randn()
+        target_time = self.delay_mean + self.delay_std * np.random.randn()
         while time.process_time() - start < target_time:
             idx += 1
 
         return self.observation, 0, False, False, {}
+
 
 class PerformanceEmpiric(gymnasium.Env):
     def __init__(self, count_n=0, count_std=0, bandwidth=1):
         np.random.seed(time.time_ns() % 2**32)
 
         self.observation_space = gymnasium.spaces.Box(
-            low=-2**20, high=2**20,
-            shape=(bandwidth,), dtype=np.float32
+            low=-(2**20), high=2**20, shape=(bandwidth,), dtype=np.float32
         )
         self.action_space = gymnasium.spaces.Discrete(2)
         self.observation = self.observation_space.sample()
@@ -347,14 +353,15 @@ class PerformanceEmpiric(gymnasium.Env):
 
     def step(self, action):
         idx = 0
-        target = self.count_n  +  self.count_std * np.random.randn()
+        target = self.count_n + self.count_std * np.random.randn()
         while idx < target:
             idx += 1
 
         return self.observation, 0, False, False, {}
 
+
 class Spaces(gymnasium.Env):
-    '''Pufferlib Spaces environment
+    """Pufferlib Spaces environment
 
     A simple environment with hierarchical observation and action spaces
 
@@ -364,18 +371,23 @@ class Spaces(gymnasium.Env):
     0.5 reward is given for each correct action
 
     Does not provide rendering
-    '''
+    """
+
     def __init__(self):
-        self.observation_space = gymnasium.spaces.Dict({
-            'image': gymnasium.spaces.Box(
-                low=0, high=1, shape=(5, 5), dtype=np.float32),
-            'flat': gymnasium.spaces.Box(
-                low=-1, high=1, shape=(5,), dtype=np.int8),
-        })
-        self.action_space = gymnasium.spaces.Dict({
-            'image': gymnasium.spaces.Discrete(2),
-            'flat': gymnasium.spaces.Discrete(2),
-        })
+        self.observation_space = gymnasium.spaces.Dict(
+            {
+                'image': gymnasium.spaces.Box(
+                    low=0, high=1, shape=(5, 5), dtype=np.float32
+                ),
+                'flat': gymnasium.spaces.Box(low=-1, high=1, shape=(5,), dtype=np.int8),
+            }
+        )
+        self.action_space = gymnasium.spaces.Dict(
+            {
+                'image': gymnasium.spaces.Discrete(2),
+                'flat': gymnasium.spaces.Discrete(2),
+            }
+        )
         self.render_mode = 'ansi'
 
     def reset(self, seed=None):
@@ -403,8 +415,9 @@ class Spaces(gymnasium.Env):
         info = dict(score=reward)
         return self.observation, reward, True, False, info
 
+
 class Squared(gymnasium.Env):
-    '''Pufferlib Squared environment
+    """Pufferlib Squared environment
 
     Agent starts at the center of a square grid.
     Targets are placed on the perimeter of the grid.
@@ -418,15 +431,16 @@ class Squared(gymnasium.Env):
     Args:
         distance_to_target: The distance from the center to the closest target.
         num_targets: The number of targets to randomly generate.
- 
-    '''
+
+    """
 
     MOVES = [(0, -1), (0, 1), (-1, 0), (1, 0), (1, -1), (-1, -1), (1, 1), (-1, 1)]
 
-    def __init__(self,
+    def __init__(
+        self,
         distance_to_target=1,
         num_targets=-1,
-        ):
+    ):
         grid_size = 2 * distance_to_target + 1
         if num_targets == -1:
             num_targets = 4 * distance_to_target
@@ -437,13 +451,18 @@ class Squared(gymnasium.Env):
         self.grid_size = grid_size
         self.max_ticks = num_targets * distance_to_target
         self.observation_space = gymnasium.spaces.Box(
-            low=-1, high=1, shape=(grid_size, grid_size))
+            low=-1, high=1, shape=(grid_size, grid_size)
+        )
         self.action_space = gymnasium.spaces.Discrete(8)
         self.render_mode = 'ansi'
 
     def _all_possible_targets(self, grid_size):
-        return [(x, y) for x in range(grid_size) for y in range(grid_size)
-                if x == 0 or y == 0 or x == grid_size - 1 or y == grid_size - 1]
+        return [
+            (x, y)
+            for x in range(grid_size)
+            for y in range(grid_size)
+            if x == 0 or y == 0 or x == grid_size - 1 or y == grid_size - 1
+        ]
 
     def reset(self, seed=None):
         if seed is not None:
@@ -470,7 +489,7 @@ class Squared(gymnasium.Env):
         x += dx
         y += dy
 
-        min_dist = min([max(abs(x-tx), abs(y-ty)) for tx, ty in self.targets])
+        min_dist = min([max(abs(x - tx), abs(y - ty)) for tx, ty in self.targets])
         # This reward function will return 0.46 average reward for an unsuccessful
         # episode with distance_to_target=4 and num_targets=1 (0.5 for solve)
         # It looks reasonable but is not very discriminative
@@ -479,30 +498,31 @@ class Squared(gymnasium.Env):
         # This reward function will return 1 when the agent moves in the right direction
         # (plus an adjustment for the 0 reset reward) to average 1 for success
         # It is not much better than the previous one.
-        #reward = state.distance_to_target - min_dist - state.tick + 1/state.max_ticks
+        # reward = state.distance_to_target - min_dist - state.tick + 1/state.max_ticks
 
         # This function will return 0, 0.2, 0.4, ... 1 for successful episodes (n=5)
         # And will drop rewards to 0 or less as soon as an error is made
         # Somewhat smoother but actually worse than the previous ones
         # reward = (state.distance_to_target - min_dist - state.tick) / (state.max_ticks - state.tick)
 
-
         # This one nicely tracks the task completed metric but does not optimize well
-        #if state.distance_to_target - min_dist - state.tick  == 1:
+        # if state.distance_to_target - min_dist - state.tick  == 1:
         #    reward = 1
-        #else:
+        # else:
         #    reward = -state.tick
 
         if (x, y) in self.targets:
             self.targets.remove((x, y))
-            #state.grid[x, y] = 0
+            # state.grid[x, y] = 0
 
-        dist_from_origin = max(abs(x-self.distance_to_target), abs(y-self.distance_to_target))
+        dist_from_origin = max(
+            abs(x - self.distance_to_target), abs(y - self.distance_to_target)
+        )
         if dist_from_origin >= self.distance_to_target:
             self.agent_pos = self.distance_to_target, self.distance_to_target
         else:
             self.agent_pos = x, y
-        
+
         self.grid[self.agent_pos] = -1
         self.tick += 1
 
@@ -526,8 +546,9 @@ class Squared(gymnasium.Env):
             chars.append('\n')
         return ''.join(chars)
 
+
 class Stochastic(gymnasium.Env):
-    '''Pufferlib Stochastic environment
+    """Pufferlib Stochastic environment
 
     The optimal policy is to play action 0 < p % of the time and action 1 < (1 - p) %
     This is a test of whether your algorithm can learn a nontrivial stochastic policy.
@@ -539,12 +560,12 @@ class Stochastic(gymnasium.Env):
     Args:
         p: The optimal probability for action 0
         horizon: How often the environment should reset
-    '''
+    """
+
     def __init__(self, p=0.75, horizon=1000):
         self.p = p
         self.horizon = horizon
-        self.observation_space = gymnasium.spaces.Box(
-            low=0, high=1, shape=(1,))
+        self.observation_space = gymnasium.spaces.Box(low=0, high=1, shape=(1,))
         self.action_space = gymnasium.spaces.Discrete(2)
         self.render_mode = 'ansi'
 
@@ -569,11 +590,16 @@ class Stochastic(gymnasium.Env):
 
         terminal = self.tick == self.horizon
         atn0_frac = self.count / self.tick
-        proximity_to_p = 1 - (self.p - atn0_frac)**2
+        proximity_to_p = 1 - (self.p - atn0_frac) ** 2
 
-        reward = proximity_to_p if (
-            (action == 0 and atn0_frac < self.p) or
-            (action == 1 and atn0_frac >= self.p)) else 0
+        reward = (
+            proximity_to_p
+            if (
+                (action == 0 and atn0_frac < self.p)
+                or (action == 1 and atn0_frac >= self.p)
+            )
+            else 0
+        )
 
         info = {}
         if terminal:
@@ -590,6 +616,7 @@ class Stochastic(gymnasium.Env):
             else:
                 c = 90
             return f'\033[{c}m██\033[0m'
+
         chars = []
         if self.tick == 0:
             solution = 0
@@ -603,23 +630,22 @@ class Stochastic(gymnasium.Env):
 
         return ''.join(chars)
 
+
 class Continuous(gymnasium.Env):
     def __init__(self, discretize=False):
-        self.observation_space=gymnasium.spaces.Box(
-            low=-1, high=1, shape=(6,))
+        self.observation_space = gymnasium.spaces.Box(low=-1, high=1, shape=(6,))
         self.discretize = discretize
         if discretize:
-            self.action_space=gymnasium.spaces.Discrete(4)
+            self.action_space = gymnasium.spaces.Discrete(4)
         else:
-            self.action_space=gymnasium.spaces.Box(
-                low=-1, high=1, shape=(2,))
+            self.action_space = gymnasium.spaces.Box(low=-1, high=1, shape=(2,))
 
         self.render_mode = 'human'
         self.client = None
 
     def reset(self, seed=None, options=None):
         # pos_x, pos_y, vel_x, vel_y, target_x, target_y
-        self.state = 2*np.random.rand(6)-1
+        self.state = 2 * np.random.rand(6) - 1
         self.state[2:4] = 0
         self.tick = 0
 
@@ -637,7 +663,7 @@ class Continuous(gymnasium.Env):
             elif action == 3:
                 accel_y = 0.1
         else:
-            accel_x, accel_y = 0.1*action
+            accel_x, accel_y = 0.1 * action
 
         self.state[2] += accel_x
         self.state[3] += accel_y
@@ -649,7 +675,7 @@ class Continuous(gymnasium.Env):
         if pos_x < -1 or pos_x > 1 or pos_y < -1 or pos_y > 1:
             return self.state, -1, True, False, {'score': 0}
 
-        dist = np.sqrt((pos_x - target_x)**2 + (pos_y - target_y)**2)
+        dist = np.sqrt((pos_x - target_x) ** 2 + (pos_y - target_y) ** 2)
         reward = 0.02 * (1 - dist)
 
         self.tick += 1
@@ -676,6 +702,7 @@ class Continuous(gymnasium.Env):
         frame, atn = self.client.render(pos_x, pos_y, target_x, target_y)
         return frame
 
+
 class RaylibClient:
     def __init__(self, width=1080, height=720, size=20):
         self.width = width
@@ -683,20 +710,22 @@ class RaylibClient:
         self.size = size
 
         from raylib import rl
-        rl.InitWindow(width, height,
-            "PufferLib Simple Continuous".encode())
+
+        rl.InitWindow(width, height, 'PufferLib Simple Continuous'.encode())
         rl.SetTargetFPS(10)
         self.rl = rl
 
         from cffi import FFI
+
         self.ffi = FFI()
 
     def _cdata_to_numpy(self):
         image = self.rl.LoadImageFromScreen()
         width, height, channels = image.width, image.height, 4
-        cdata = self.ffi.buffer(image.data, width*height*channels)
-        return np.frombuffer(cdata, dtype=np.uint8
-            ).reshape((height, width, channels))[:, :, :3]
+        cdata = self.ffi.buffer(image.data, width * height * channels)
+        return np.frombuffer(cdata, dtype=np.uint8).reshape((height, width, channels))[
+            :, :, :3
+        ]
 
     def render(self, pos_x, pos_y, target_x, target_y):
         rl = self.rl
@@ -713,10 +742,10 @@ class RaylibClient:
         rl.BeginDrawing()
         rl.ClearBackground([6, 24, 24, 255])
 
-        pos_x = int((0.5+pos_x/2) * self.width)
-        pos_y = int((0.5+pos_y/2) * self.height)
-        target_x = int((0.5+target_x/2) * self.width)
-        target_y = int((0.5+target_y/2) * self.height)
+        pos_x = int((0.5 + pos_x / 2) * self.width)
+        pos_y = int((0.5 + pos_y / 2) * self.height)
+        target_x = int((0.5 + target_x / 2) * self.width)
+        target_y = int((0.5 + target_y / 2) * self.height)
 
         rl.DrawCircle(pos_x, pos_y, self.size, [255, 0, 0, 255])
         rl.DrawCircle(target_x, target_y, self.size, [0, 0, 255, 255])

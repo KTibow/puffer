@@ -9,13 +9,16 @@ import pufferlib.environments
 def env_creator(name='cooperative_pong_v5'):
     return functools.partial(make, name)
 
+
 def make(name, buf=None):
     pufferlib.environments.try_import('pettingzoo.butterfly', 'butterfly')
     if name == 'cooperative_pong_v5':
         from pettingzoo.butterfly import cooperative_pong_v5 as pong
+
         env_cls = pong.raw_env
     elif name == 'knights_archers_zombies_v10':
         from pettingzoo.butterfly import knights_archers_zombies_v10 as kaz
+
         env_cls = kaz.raw_env
     else:
         raise ValueError(f'Unknown environment: {name}')

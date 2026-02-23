@@ -14,16 +14,26 @@ from stable_baselines3.common.atari_wrappers import (
     MaxAndSkipEnv,
 )
 
+
 def env_creator(name='bigfish'):
     return functools.partial(make, name)
 
-def make(name, num_envs=1, num_levels=0, start_level=0,
-        distribution_mode='easy', render_mode=None, buf=None, seed=0):
-    '''Atari creation function with default CleanRL preprocessing based on Stable Baselines3 wrappers'''
-    assert int(num_envs) == float(num_envs), "num_envs must be an integer"
+
+def make(
+    name,
+    num_envs=1,
+    num_levels=0,
+    start_level=0,
+    distribution_mode='easy',
+    render_mode=None,
+    buf=None,
+    seed=0,
+):
+    """Atari creation function with default CleanRL preprocessing based on Stable Baselines3 wrappers"""
+    assert int(num_envs) == float(num_envs), 'num_envs must be an integer'
     num_envs = int(num_envs)
 
-    procgen = pufferlib.environments.try_import('procgen') 
+    procgen = pufferlib.environments.try_import('procgen')
     envs = procgen.ProcgenEnv(
         env_name=name,
         num_envs=num_envs,
@@ -32,21 +42,24 @@ def make(name, num_envs=1, num_levels=0, start_level=0,
         distribution_mode=distribution_mode,
         render_mode=render_mode,
     )
-    envs = gym.wrappers.TransformObservation(envs, lambda obs: obs["rgb"])
+    envs = gym.wrappers.TransformObservation(envs, lambda obs: obs['rgb'])
     envs.single_action_space = envs.action_space
-    envs.single_observation_space = envs.observation_space["rgb"]
+    envs.single_observation_space = envs.observation_space['rgb']
     envs.is_vector_env = True
     envs = gym.wrappers.RecordEpisodeStatistics(envs)
     envs = gym.wrappers.NormalizeReward(envs)
     envs = gym.wrappers.TransformReward(envs, lambda reward: np.clip(reward, -10, 10))
-    assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+    assert isinstance(envs.single_action_space, gym.spaces.Discrete), (
+        'only discrete action space is supported'
+    )
     envs = ProcgenWrapper(envs)
     envs = shimmy.GymV21CompatibilityV0(env=envs, render_mode=render_mode)
-    #envs = gymnasium.wrappers.GrayScaleObservation(envs)
-    #envs = gymnasium.wrappers.FrameStack(envs, 4)#, framestack)
-    #envs = MaxAndSkipEnv(envs, skip=2)
+    # envs = gymnasium.wrappers.GrayScaleObservation(envs)
+    # envs = gymnasium.wrappers.FrameStack(envs, 4)#, framestack)
+    # envs = MaxAndSkipEnv(envs, skip=2)
     envs = pufferlib.EpisodeStats(envs)
     return pufferlib.emulation.GymnasiumPufferEnv(env=envs, buf=buf)
+
 
 class ProcgenWrapper:
     def __init__(self, env):

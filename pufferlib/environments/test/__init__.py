@@ -1,7 +1,7 @@
 from .environment import (
     GymnasiumPerformanceEnv,
     PettingZooPerformanceEnv,
-    GymnasiumTestEnv, 
+    GymnasiumTestEnv,
     PettingZooTestEnv,
     make_all_mock_environments,
     MOCK_OBSERVATION_SPACES,
@@ -17,6 +17,7 @@ except ImportError:
     pass
 else:
     from .torch import Policy
+
     try:
         from .torch import Recurrent
     except:

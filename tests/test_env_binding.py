@@ -15,6 +15,7 @@ kwargs = dict(
     continuous=False,
 )
 
+
 def test_env_binding():
     reference = breakout.Breakout()
 
@@ -26,7 +27,7 @@ def test_env_binding():
         reference.terminals,
         reference.truncations,
         0,
-        **kwargs
+        **kwargs,
     )
     c_envs = breakout.binding.vectorize(c_env)
     breakout.binding.vec_reset(c_envs, 0)
@@ -42,7 +43,7 @@ def test_env_binding():
         reference.truncations,
         reference.num_agents,
         0,
-        **kwargs
+        **kwargs,
     )
 
     # Correct vec usage
@@ -54,7 +55,7 @@ def test_env_binding():
         reference.truncations,
         reference.num_agents,
         0,
-        **kwargs
+        **kwargs,
     )
     breakout.binding.vec_reset(c_envs, 0)
     breakout.binding.vec_step(c_envs)
@@ -111,6 +112,7 @@ def test_env_binding():
         raise Exception('vec_step missing arg. Should have thrown TypeError')
     except TypeError:
         pass
+
 
 if __name__ == '__main__':
     test_env_binding()

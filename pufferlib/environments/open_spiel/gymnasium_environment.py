@@ -21,21 +21,24 @@ def create_bots(state, seed):
     rnd_state = np.random.RandomState(seed)
 
     evaluator = mcts.RandomRolloutEvaluator(
-        n_rollouts=state.n_rollouts,
-        random_state=rnd_state
+        n_rollouts=state.n_rollouts, random_state=rnd_state
     )
 
-    return [mcts.MCTSBot(
-        game=state.env,
-        uct_c=2,
-        max_simulations=a,
-        evaluator=evaluator,
-        random_state=rnd_state, 
-        child_selection_fn=mcts.SearchNode.puct_value,
-        solve=True,
-    ) for a in range(state.min_simulations, state.max_simulations + 1)]
-    
-def reset(state, seed = None, options = None):
+    return [
+        mcts.MCTSBot(
+            game=state.env,
+            uct_c=2,
+            max_simulations=a,
+            evaluator=evaluator,
+            random_state=rnd_state,
+            child_selection_fn=mcts.SearchNode.puct_value,
+            solve=True,
+        )
+        for a in range(state.min_simulations, state.max_simulations + 1)
+    ]
+
+
+def reset(state, seed=None, options=None):
     state.state = state.env.new_initial_state()
 
     if not state.has_reset:
@@ -49,10 +52,11 @@ def reset(state, seed = None, options = None):
     if np.random.rand() < 0.5:
         bot_atn = state.bot.step(state.state)
         state.state.apply_action(bot_atn)
-    
+
     obs, infos = get_obs_and_infos(state)
     player = state.state.current_player()
     return obs[player], infos[player]
+
 
 def step(state, action):
     player = state.state.current_player()
@@ -74,9 +78,10 @@ def step(state, action):
     terminated = state.state.is_terminal()
     if terminated:
         key = f'win_mcts_{state.bot.max_simulations}'
-        info[key] = int(reward==1)
+        info[key] = int(reward == 1)
 
     return obs[player], reward, terminated, False, info
+
 
 class OpenSpielGymnasiumEnvironment:
     __init__ = init

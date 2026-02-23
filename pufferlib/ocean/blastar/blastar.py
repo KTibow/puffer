@@ -3,6 +3,7 @@ import gymnasium
 import pufferlib
 from pufferlib.ocean.blastar import binding
 
+
 class Blastar(pufferlib.PufferEnv):
     def __init__(self, num_envs=1, render_mode=None, buf=None, seed=0):
         self.single_observation_space = gymnasium.spaces.Box(
@@ -14,7 +15,7 @@ class Blastar(pufferlib.PufferEnv):
         self.num_obs = self.single_observation_space.shape[0]
         self.tick = 0
         self.log_interval = 1
-        
+
         super().__init__(buf)
         self.c_envs = binding.vec_init(
             self.observations,
@@ -24,7 +25,7 @@ class Blastar(pufferlib.PufferEnv):
             self.truncations,
             num_envs,
             seed,
-            num_obs=self.num_obs
+            num_obs=self.num_obs,
         )
 
     def reset(self, seed=None):
@@ -40,15 +41,15 @@ class Blastar(pufferlib.PufferEnv):
         info = []
         if self.tick % self.log_interval == 0:
             info.append(binding.vec_log(self.c_envs))
-            
-        return (self.observations, self.rewards,
-                self.terminals, self.truncations, info)
+
+        return (self.observations, self.rewards, self.terminals, self.truncations, info)
 
     def render(self):
         binding.vec_render(self.c_envs, 0)
 
     def close(self):
         binding.vec_close(self.c_envs)
+
 
 def test_performance(timeout=10, atn_cache=1024):
     env = Blastar(num_envs=1000)
@@ -57,8 +58,9 @@ def test_performance(timeout=10, atn_cache=1024):
 
     rng = np.random.default_rng()
     actions = rng.integers(0, 6, (atn_cache, env.num_agents))
- 
+
     import time
+
     start = time.time()
     while time.time() - start < timeout:
         atn = actions[tick % atn_cache]
@@ -66,6 +68,7 @@ def test_performance(timeout=10, atn_cache=1024):
         tick += 1
 
     print('SPS:', env.num_agents * tick / (time.time() - start))
+
 
 if __name__ == '__main__':
     test_performance()

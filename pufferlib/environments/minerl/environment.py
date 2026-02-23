@@ -13,15 +13,16 @@ import pufferlib.utils
 def env_creator(name='MineRLBasaltFindCave-v0'):
     return functools.partial(make, name=name)
 
+
 def make(name, buf=None):
-    '''Minecraft environment creation function'''
+    """Minecraft environment creation function"""
 
     pufferlib.environments.try_import('minerl')
 
     # Monkey patch to add .itmes to old gym.spaces.Dict
-    #gym.spaces.Dict.items = lambda self: self.spaces.items()
+    # gym.spaces.Dict.items = lambda self: self.spaces.items()
 
-    #with pufferlib.utils.Suppress():
+    # with pufferlib.utils.Suppress():
     env = gym.make(name)
 
     env = shimmy.GymV21CompatibilityV0(env=env)

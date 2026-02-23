@@ -12,11 +12,12 @@ import pufferlib.environments
 def env_creator(name='GlobalAgentCombinedRewardEnv'):
     return functools.partial(make, name)
 
+
 def make(name, buf=None):
-    '''Gym MicroRTS creation function
-    
+    """Gym MicroRTS creation function
+
     This library appears broken. Step crashes in Java.
-    '''
+    """
     pufferlib.environments.try_import('gym_microrts')
     if name == 'GlobalAgentCombinedRewardEnv':
         from gym_microrts.envs import GlobalAgentCombinedRewardEnv
@@ -32,6 +33,7 @@ def make(name, buf=None):
     env = MicroRTS(env)
     env = shimmy.GymV21CompatibilityV0(env=env)
     return pufferlib.emulation.GymnasiumPufferEnv(env=env, buf=buf)
+
 
 class MicroRTS:
     def __init__(self, env):

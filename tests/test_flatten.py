@@ -21,7 +21,7 @@ samples = [
     {'a': {'b': [1, 2, (3, 4, {'e': 5})]}},
     [[1, 2], 3, {'a': (4, 5)}],
     (1, [2, {'a': 3}], {'b': 4}, [5, 6]),
-    {'mixed': (1, [2, 3], {'a': 4, 'b': (5, [6, 7])})}
+    {'mixed': (1, [2, 3], {'a': 4, 'b': (5, [6, 7])})},
 ]
 
 
@@ -37,33 +37,40 @@ def compare_data(data, unflat):
     else:
         return data == unflat
 
+
 def test_flatten_unflatten():
     for sample in samples:
         structure = flatten_structure(sample)
         flat = c.flatten(sample)
         unflat = c.unflatten(flat, structure)
         if not compare_data(sample, unflat):
-            print(f"Sample: {sample}")
-            print(f"Flattened: {flat}")
-            print(f"Unflattened: {unflat}")
+            print(f'Sample: {sample}')
+            print(f'Flattened: {flat}')
+            print(f'Unflattened: {unflat}')
             breakpoint()
         assert compare_data(sample, unflat)
 
+
 def test_flatten_performance(n=100_000):
-    print("\nFlatten Performance Testing:")
+    print('\nFlatten Performance Testing:')
     total_calls_per_second = 0
     num_samples = len(samples)
     for sample in samples:
         wrapped = lambda: c.flatten(sample)
         time_per_call = timeit.timeit(wrapped, number=n) / n
         calls_per_second_in_k = int(1 / time_per_call / 1000)
-        print(f"Sample {str(sample)[:10]}... - Average flatten calls per second: {calls_per_second_in_k} K")
+        print(
+            f'Sample {str(sample)[:10]}... - Average flatten calls per second: {calls_per_second_in_k} K'
+        )
         total_calls_per_second += calls_per_second_in_k
     avg_calls_per_second_in_k = total_calls_per_second // num_samples
-    print(f"Average flatten calls per second across all samples: {avg_calls_per_second_in_k} K")
+    print(
+        f'Average flatten calls per second across all samples: {avg_calls_per_second_in_k} K'
+    )
+
 
 def test_unflatten_performance(n=100_000):
-    print("\nUnflatten Performance Testing:")
+    print('\nUnflatten Performance Testing:')
     total_calls_per_second = 0
     num_samples = len(samples)
     for sample in samples:
@@ -72,13 +79,17 @@ def test_unflatten_performance(n=100_000):
         wrapped = lambda: c.unflatten(flat, structure)
         time_per_call = timeit.timeit(wrapped, number=n) / n
         calls_per_second_in_k = int(1 / time_per_call / 1000)
-        print(f"Sample {str(sample)[:10]}... - Average unflatten calls per second: {calls_per_second_in_k} K")
+        print(
+            f'Sample {str(sample)[:10]}... - Average unflatten calls per second: {calls_per_second_in_k} K'
+        )
         total_calls_per_second += calls_per_second_in_k
     avg_calls_per_second_in_k = total_calls_per_second // num_samples
-    print(f"Average unflatten calls per second across all samples: {avg_calls_per_second_in_k} K")
+    print(
+        f'Average unflatten calls per second across all samples: {avg_calls_per_second_in_k} K'
+    )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     test_flatten_unflatten()
     test_flatten_performance()
     test_unflatten_performance()

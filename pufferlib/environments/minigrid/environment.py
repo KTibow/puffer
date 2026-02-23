@@ -14,6 +14,7 @@ ALIASES = {
 def env_creator(name='minigrid'):
     return functools.partial(make, name=name)
 
+
 def make(name, render_mode='rgb_array', buf=None, seed=0):
     if name in ALIASES:
         name = ALIASES[name]
@@ -24,13 +25,13 @@ def make(name, render_mode='rgb_array', buf=None, seed=0):
     env = pufferlib.EpisodeStats(env)
     return pufferlib.emulation.GymnasiumPufferEnv(env=env, buf=buf)
 
+
 class MiniGridWrapper:
     def __init__(self, env):
         self.env = env
-        self.observation_space = gymnasium.spaces.Dict({
-            k: v for k, v in self.env.observation_space.items() if
-            k != 'mission'
-        })
+        self.observation_space = gymnasium.spaces.Dict(
+            {k: v for k, v in self.env.observation_space.items() if k != 'mission'}
+        )
         self.action_space = self.env.action_space
         self.close = self.env.close
         self.render = self.env.render

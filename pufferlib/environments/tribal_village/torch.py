@@ -21,10 +21,12 @@ class Policy(nn.Module):
 
         # Action heads
         action_space = env.single_action_space
-        self.actor = nn.ModuleList([
-            pufferlib.pytorch.layer_init(nn.Linear(hidden_size, n), std=0.01)
-            for n in action_space.nvec
-        ])
+        self.actor = nn.ModuleList(
+            [
+                pufferlib.pytorch.layer_init(nn.Linear(hidden_size, n), std=0.01)
+                for n in action_space.nvec
+            ]
+        )
 
         # Value head
         self.value = pufferlib.pytorch.layer_init(nn.Linear(hidden_size, 1), std=1.0)
@@ -38,12 +40,16 @@ class Policy(nn.Module):
         hidden = self.encode_observations(observations, state)
         return self.decode_actions(hidden)
 
-    def encode_observations(self, observations: torch.Tensor, state=None) -> torch.Tensor:
+    def encode_observations(
+        self, observations: torch.Tensor, state=None
+    ) -> torch.Tensor:
         """Ultra-fast dense observation processing."""
         # observations shape: (batch, 21, 11, 11) - direct dense format from Nim
 
         # Global average pooling across spatial dimensions
-        features = observations.float().mean(dim=(2, 3))  # (batch, 21) - one value per layer
+        features = observations.float().mean(
+            dim=(2, 3)
+        )  # (batch, 21) - one value per layer
 
         # Use the pre-initialized layer projection
         hidden = torch.relu(self.layer_proj(features))  # (batch, hidden_size)

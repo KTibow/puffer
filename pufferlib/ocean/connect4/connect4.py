@@ -1,9 +1,9 @@
-'''High-perf Pong
+"""High-perf Pong
 
 Inspired from https://gist.github.com/Yttrmin/18ecc3d2d68b407b4be1
 & https://jair.org/index.php/jair/article/view/10819/25823
 & https://www.youtube.com/watch?v=PSQt5KGv7Vk
-'''
+"""
 
 import numpy as np
 import gymnasium
@@ -13,19 +13,28 @@ from pufferlib.ocean.connect4 import binding
 
 
 class Connect4(pufferlib.PufferEnv):
-    def __init__(self, num_envs=1, render_mode=None, report_interval=128,
-             buf=None, seed=0):
+    def __init__(
+        self, num_envs=1, render_mode=None, report_interval=128, buf=None, seed=0
+    ):
 
-        self.single_observation_space = gymnasium.spaces.Box(low=0, high=1,
-            shape=(42,), dtype=np.float32)
+        self.single_observation_space = gymnasium.spaces.Box(
+            low=0, high=1, shape=(42,), dtype=np.float32
+        )
         self.single_action_space = gymnasium.spaces.Discrete(7)
         self.report_interval = report_interval
         self.render_mode = render_mode
         self.num_agents = num_envs
 
         super().__init__(buf=buf)
-        self.c_envs = binding.vec_init(self.observations, self.actions, self.rewards,
-            self.terminals, self.truncations, num_envs, seed)
+        self.c_envs = binding.vec_init(
+            self.observations,
+            self.actions,
+            self.rewards,
+            self.terminals,
+            self.truncations,
+            num_envs,
+            seed,
+        )
 
     def reset(self, seed=None):
         self.tick = 0
@@ -46,8 +55,7 @@ class Connect4(pufferlib.PufferEnv):
             if log['episode_length'] > 0:
                 info.append(log)
 
-        return (self.observations, self.rewards,
-            self.terminals, self.truncations, info)
+        return (self.observations, self.rewards, self.terminals, self.truncations, info)
 
     def render(self):
         binding.vec_render(self.c_envs, 0)
@@ -71,7 +79,7 @@ def test_performance(timeout=10, atn_cache=1024, num_envs=1024):
 
     start = time.time()
     while time.time() - start < timeout:
-        atn = actions[tick % atn_cache]         
+        atn = actions[tick % atn_cache]
         env.step(atn)
         tick += 1
 

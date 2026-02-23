@@ -20,10 +20,11 @@ class SyntheticExperiment:
         self.param_optima = np.random.randn(n_params)
 
     def optimize(self, params):
-        dist = (params-self.param_optima)**2
-        reward = 2**(-dist)
-        noise = 1 + self.noise*np.random.randn()
+        dist = (params - self.param_optima) ** 2
+        reward = 2 ** (-dist)
+        noise = 1 + self.noise * np.random.randn()
         return noise * np.prod(reward)
+
 
 class CARBSSearch:
     def __init__(self, experiment):
@@ -32,9 +33,11 @@ class CARBSSearch:
         self.best_params = None
 
         param_spaces = [
-            Param(name=str(i),
-                    space=LinearSpace(min=-10, max=10, is_integer=False),
-                    search_center=0.0)
+            Param(
+                name=str(i),
+                space=LinearSpace(min=-10, max=10, is_integer=False),
+                search_center=0.0,
+            )
             for i in range(self.experiment.n_params)
         ]
         carbs_params = CARBSParams(
@@ -56,10 +59,11 @@ class CARBSSearch:
             ObservationInParam(
                 input=suggestion,
                 output=reward,
-                cost=1,#uptime,
+                cost=1,  # uptime,
             )
         )
         return params, reward
+
 
 class GeneticAlgorithm:
     def __init__(self, experiment, mutation_rate=0.1):
@@ -69,7 +73,7 @@ class GeneticAlgorithm:
         self.best_params = np.random.randn(self.experiment.n_params)
 
     def sample(self):
-        mutation = self.mutation_rate*np.random.randn(self.experiment.n_params)
+        mutation = self.mutation_rate * np.random.randn(self.experiment.n_params)
         params = self.best_params + mutation
         reward = self.experiment.optimize(params)
         if self.best_reward is None or reward > self.best_reward:
@@ -78,14 +82,16 @@ class GeneticAlgorithm:
 
         return params, reward
 
+
 class WandbSearch:
     def __init__(self, experiment, method='bayes', strategy=None):
         self.experiment = experiment
         self.strategy = strategy
 
-        self.parameters = {f'param_{i}':
-            {'distribution': 'normal', 'mu': 0, 'sigma': 1}
-            for i in range(10)}
+        self.parameters = {
+            f'param_{i}': {'distribution': 'normal', 'mu': 0, 'sigma': 1}
+            for i in range(10)
+        }
 
         name = strategy.__class__.__name__ if strategy is not None else method
         self.sweep_id = wandb.sweep(
@@ -98,7 +104,7 @@ class WandbSearch:
                 ),
                 parameters=self.parameters,
             ),
-            project="sweeping",
+            project='sweeping',
         )
         self.idx = 0
 

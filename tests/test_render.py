@@ -32,15 +32,15 @@ if __name__ == '__main__':
         if args.render_mode == 'rgb_array':
             frame = env.render()
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-            #if ob.shape[0] in (1, 3, 4):
+            # if ob.shape[0] in (1, 3, 4):
             #    ob = ob.transpose(1, 2, 0)
             cv2.imshow('frame', frame)
 
-            #cv2.imshow('ob', ob)
+            # cv2.imshow('ob', ob)
             cv2.waitKey(1)
         elif args.render_mode == 'ansi':
             chars = env.render()
-            print("\033c", end="")
+            print('\033c', end='')
             print(chars)
 
         ob = ob.reshape(1, *ob.shape)
@@ -48,6 +48,5 @@ if __name__ == '__main__':
         ob, reward, terminal, truncated, info = env.step(action)
         env.render()
         start = time.time()
-        if time.time() - start < 1/60:
-            time.sleep(1/60 - (time.time() - start))
-           
+        if time.time() - start < 1 / 60:
+            time.sleep(1 / 60 - (time.time() - start))

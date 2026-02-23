@@ -5,9 +5,11 @@ import numpy as np
 import torch
 
 import pandas as pd
+
 try:
     import matplotlib.pyplot as plt
     from matplotlib.ticker import MaxNLocator
+
     _MATPLOTLIB_AVAILABLE = True
 except ImportError:
     _MATPLOTLIB_AVAILABLE = False
@@ -55,9 +57,9 @@ def evaluate_gp(gp_model, likelihood, test_x, test_y):
     )
 
     return {
-        "mae": mae,
-        "rmse": rmse,
-        "nll": nll,
+        'mae': mae,
+        'rmse': rmse,
+        'nll': nll,
     }
 
 
@@ -65,7 +67,7 @@ def _validate_gp_model(
     gp_model, likelihood, val_obs, train_obs, target_key, use_log=False
 ):
     """Helper to prepare validation data, evaluate a GP model, and print metrics."""
-    val_x = torch.from_numpy(np.stack([e["input"] for e in val_obs])).to(torch.float64)
+    val_x = torch.from_numpy(np.stack([e['input'] for e in val_obs])).to(torch.float64)
     val_y = torch.from_numpy(np.array([e[target_key] for e in val_obs])).to(
         torch.float64
     )
@@ -80,12 +82,12 @@ def _validate_gp_model(
 
     metrics = evaluate_gp(gp_model, likelihood, val_x, val_y_norm)
 
-    target_name = f"log-{target_key}" if use_log else target_key
+    target_name = f'log-{target_key}' if use_log else target_key
     print(
-        f"{target_key.capitalize()} GP Validation Metrics (on normalized {target_name}):"
+        f'{target_key.capitalize()} GP Validation Metrics (on normalized {target_name}):'
     )
     for k, v in metrics.items():
-        print(f"  {k}: {v:.4f}")
+        print(f'  {k}: {v:.4f}')
 
     return metrics
 
@@ -94,18 +96,18 @@ def run_experiment(args, train_obs, val_obs, gp_iter, gp_lr, use_gpu=False):
     """
     Trains and validates the GP models from the Protein sweep.
     """
-    print(f"\n--- Testing with gp_iter={gp_iter}, gp_lr={gp_lr} ---")
+    print(f'\n--- Testing with gp_iter={gp_iter}, gp_lr={gp_lr} ---')
 
     # Initialize a Protein object to get access to its GP models and helpers
     sweep_manager = Protein(
-        args["sweep"],
+        args['sweep'],
         gp_training_iter=gp_iter,
         gp_learning_rate=gp_lr,
         use_gpu=use_gpu,
     )
 
     # --- Train GPs using the observe/suggest loop ---
-    print("Training GPs by observing data iteratively (10 obs per suggest)...")
+    print('Training GPs by observing data iteratively (10 obs per suggest)...')
     batch_size = 10
     score_loss_history = []
     cost_loss_history = []
@@ -118,8 +120,8 @@ def run_experiment(args, train_obs, val_obs, gp_iter, gp_lr, use_gpu=False):
         for obs in batch_obs:
             # The 'input' in the pickled file is a numpy array of normalized params.
             # We need to convert it back to a dict of unnormalized params for observe.
-            hypers = sweep_manager.hyperparameters.to_dict(obs["input"])
-            sweep_manager.observe(hypers, obs["output"], obs["cost"])
+            hypers = sweep_manager.hyperparameters.to_dict(obs['input'])
+            sweep_manager.observe(hypers, obs['output'], obs['cost'])
 
         # Skip training until some data is in
         if i < 10:
@@ -130,7 +132,7 @@ def run_experiment(args, train_obs, val_obs, gp_iter, gp_lr, use_gpu=False):
         cost_loss_history.append(cost_loss)
 
     print(
-        f"  Finished training on {len(train_obs)} observations over {num_batches} iterations."
+        f'  Finished training on {len(train_obs)} observations over {num_batches} iterations.'
     )
 
     # --- Evaluate Score GP ---
@@ -139,7 +141,7 @@ def run_experiment(args, train_obs, val_obs, gp_iter, gp_lr, use_gpu=False):
         sweep_manager.likelihood_score,
         val_obs,
         train_obs,
-        target_key="output",
+        target_key='output',
     )
 
     # --- Evaluate Cost GP ---
@@ -148,7 +150,7 @@ def run_experiment(args, train_obs, val_obs, gp_iter, gp_lr, use_gpu=False):
         sweep_manager.likelihood_cost,
         val_obs,
         train_obs,
-        "cost",
+        'cost',
         use_log=True,
     )
 
@@ -160,73 +162,76 @@ def visualize_results(results_file):
     Loads GP evaluation results and creates visualizations.
     """
     if not _MATPLOTLIB_AVAILABLE:
-        print("Install matplotlib to visualize results: pip install matplotlib")
+        print('Install matplotlib to visualize results: pip install matplotlib')
         return
 
     if not os.path.exists(results_file):
-        print(f"Error: Results file not found at {results_file}")
+        print(f'Error: Results file not found at {results_file}')
         return
 
-    with open(results_file, "rb") as f:
+    with open(results_file, 'rb') as f:
         results = pickle.load(f)
 
     if not results:
-        print("No results to visualize.")
+        print('No results to visualize.')
         return
 
     # --- Data Preparation ---
     # Unpack nested metric dictionaries
     flat_results = []
     for res in results:
-        if not ("score_metrics" in res or res["success"]):
+        if not ('score_metrics' in res or res['success']):
             continue
 
         flat_res = {
-            "gp_iter": res["gp_iter"],
-            "gp_lr": res["gp_lr"],
-            "score_mae": res["score_metrics"]["mae"],
-            "score_rmse": res["score_metrics"]["rmse"],
-            "score_nll": res["score_metrics"]["nll"],
-            "cost_mae": res["cost_metrics"]["mae"],
-            "cost_rmse": res["cost_metrics"]["rmse"],
-            "cost_nll": res["cost_metrics"]["nll"],
-            "score_loss_history": res["score_loss_history"],
-            "cost_loss_history": res["cost_loss_history"],
+            'gp_iter': res['gp_iter'],
+            'gp_lr': res['gp_lr'],
+            'score_mae': res['score_metrics']['mae'],
+            'score_rmse': res['score_metrics']['rmse'],
+            'score_nll': res['score_metrics']['nll'],
+            'cost_mae': res['cost_metrics']['mae'],
+            'cost_rmse': res['cost_metrics']['rmse'],
+            'cost_nll': res['cost_metrics']['nll'],
+            'score_loss_history': res['score_loss_history'],
+            'cost_loss_history': res['cost_loss_history'],
         }
         flat_results.append(flat_res)
 
     df = pd.DataFrame(flat_results)
-    iters_list = sorted(df["gp_iter"].unique())
+    iters_list = sorted(df['gp_iter'].unique())
     colors = plt.cm.viridis(np.linspace(0, 1, len(iters_list)))
     iter_color_map = dict(zip(iters_list, colors))
- 
-    lrs_list = sorted(df["gp_lr"].unique())
+
+    lrs_list = sorted(df['gp_lr'].unique())
     # Use a different colormap for the learning rates in the loss plot
     lr_colors = plt.cm.plasma(np.linspace(0, 1, len(lrs_list)))
     lr_color_map = dict(zip(lrs_list, lr_colors))
 
     # --- Plot 1: Metrics vs. Learning Rate ---
-    for gp_type in ["score", "cost"]:
+    for gp_type in ['score', 'cost']:
         fig, axes = plt.subplots(1, 3, figsize=(20, 6), sharex=True)
-        fig.suptitle(f"{gp_type.capitalize()} GP Validation Metrics vs. Learning Rate", fontsize=16)
+        fig.suptitle(
+            f'{gp_type.capitalize()} GP Validation Metrics vs. Learning Rate',
+            fontsize=16,
+        )
 
-        for i, metric in enumerate(["mae", "rmse", "nll"]):
+        for i, metric in enumerate(['mae', 'rmse', 'nll']):
             ax = axes[i]
             for iters in iters_list:
-                subset = df[df["gp_iter"] == iters]
+                subset = df[df['gp_iter'] == iters]
                 ax.plot(
-                    subset["gp_lr"],
-                    subset[f"{gp_type}_{metric}"],
-                    marker="o",
-                    linestyle="-",
+                    subset['gp_lr'],
+                    subset[f'{gp_type}_{metric}'],
+                    marker='o',
+                    linestyle='-',
                     color=iter_color_map[iters],
-                    label=f"{iters} iters",
+                    label=f'{iters} iters',
                 )
-            ax.set_xscale("log")
-            ax.set_xlabel("GP Learning Rate (log scale)")
+            ax.set_xscale('log')
+            ax.set_xlabel('GP Learning Rate (log scale)')
             ax.set_ylabel(metric.upper())
-            ax.set_title(f"{metric.upper()} vs. LR")
-            ax.grid(True, which="both", linestyle="--", linewidth=0.5)
+            ax.set_title(f'{metric.upper()} vs. LR')
+            ax.grid(True, which='both', linestyle='--', linewidth=0.5)
             ax.legend()
 
         plt.tight_layout(rect=[0, 0.03, 1, 0.95])
@@ -234,88 +239,88 @@ def visualize_results(results_file):
 
     # --- Plot 2: Loss Curves ---
     fig, axes = plt.subplots(
-        2, len(iters_list), figsize=(6 * len(iters_list), 10), sharey="row"
+        2, len(iters_list), figsize=(6 * len(iters_list), 10), sharey='row'
     )
-    fig.suptitle("GP Training Loss Curves", fontsize=16)
+    fig.suptitle('GP Training Loss Curves', fontsize=16)
     for i, iters in enumerate(iters_list):
         # Score Loss
         ax_score = axes[0, i]
-        subset = df[df["gp_iter"] == iters]
-        for _, row in subset.sort_values("gp_lr").iterrows():
+        subset = df[df['gp_iter'] == iters]
+        for _, row in subset.sort_values('gp_lr').iterrows():
             ax_score.plot(
-                row["score_loss_history"],
+                row['score_loss_history'],
                 alpha=0.7,
-                color=lr_color_map[row["gp_lr"]],
+                color=lr_color_map[row['gp_lr']],
                 label=f'lr={row["gp_lr"]:.1e}',
             )
-        ax_score.set_title(f"Score Loss (iters={iters})")
-        ax_score.set_xlabel("Training Batch")
+        ax_score.set_title(f'Score Loss (iters={iters})')
+        ax_score.set_xlabel('Training Batch')
         if i == 0:
-            ax_score.set_ylabel("Loss (MLL)")
+            ax_score.set_ylabel('Loss (MLL)')
         ax_score.xaxis.set_major_locator(MaxNLocator(integer=True))
-        ax_score.grid(True, linestyle="--", linewidth=0.5)
-        ax_score.legend(fontsize="small")
+        ax_score.grid(True, linestyle='--', linewidth=0.5)
+        ax_score.legend(fontsize='small')
 
         # Cost Loss
         ax_cost = axes[1, i]
-        for _, row in subset.sort_values("gp_lr").iterrows():
+        for _, row in subset.sort_values('gp_lr').iterrows():
             ax_cost.plot(
-                row["cost_loss_history"],
+                row['cost_loss_history'],
                 alpha=0.7,
-                color=lr_color_map[row["gp_lr"]],
+                color=lr_color_map[row['gp_lr']],
                 label=f'lr={row["gp_lr"]:.1e}',
             )
-        ax_cost.set_title(f"Cost Loss (iters={iters})")
-        ax_cost.set_xlabel("Training Batch")
+        ax_cost.set_title(f'Cost Loss (iters={iters})')
+        ax_cost.set_xlabel('Training Batch')
         if i == 0:
-            ax_cost.set_ylabel("Loss (MLL)")
+            ax_cost.set_ylabel('Loss (MLL)')
         ax_cost.xaxis.set_major_locator(MaxNLocator(integer=True))
-        ax_cost.grid(True, linestyle="--", linewidth=0.5)
-        ax_cost.legend(fontsize="small")
+        ax_cost.grid(True, linestyle='--', linewidth=0.5)
+        ax_cost.legend(fontsize='small')
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     fig.show()
 
-    print("\nVisualizations generated. Press Enter in the terminal to exit.")
+    print('\nVisualizations generated. Press Enter in the terminal to exit.')
     input()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = pufferl.make_parser()
     # Use tests/test_custom_sweep.py to collect sweep obs pkl
     parser.add_argument(
-        "-i",
-        "--input-file",
+        '-i',
+        '--input-file',
         type=str,
-        default="sweep_observations.pkl",
-        help="Path to the input sweep observations pickle file.",
+        default='sweep_observations.pkl',
+        help='Path to the input sweep observations pickle file.',
     )
     parser.add_argument(
-        "--output-file",
+        '--output-file',
         type=str,
-        default="gp_evaluation_results.pkl",
-        help="Path to save the output evaluation results pickle file.",
+        default='gp_evaluation_results.pkl',
+        help='Path to save the output evaluation results pickle file.',
     )
     parser.add_argument(
-        "--train-split-ratio",
+        '--train-split-ratio',
         type=float,
         default=0.8,
-        help="Fraction of data to use for training (the rest is for validation).",
+        help='Fraction of data to use for training (the rest is for validation).',
     )
     parser.add_argument(
-        "--visualize-only",
+        '--visualize-only',
         # default=True,
-        action="store_true",
-        help="Skip experiments and only visualize results from the output file.",
+        action='store_true',
+        help='Skip experiments and only visualize results from the output file.',
     )
 
-    env_name = "puffer_breakout"
+    env_name = 'puffer_breakout'
     args = pufferl.load_config(env_name, parser)
 
-    output_file = args["output_file"]
+    output_file = args['output_file']
 
-    if args["visualize_only"]:
-        print(f"--- Visualization Mode: Loading results from {output_file} ---")
+    if args['visualize_only']:
+        print(f'--- Visualization Mode: Loading results from {output_file} ---')
         visualize_results(output_file)
         exit()
 
@@ -324,32 +329,32 @@ if __name__ == "__main__":
 
     # Load existing results to resume, or rename old file to start fresh
     if os.path.exists(output_file):
-        print(f"Found existing results file: {output_file}. Attempting to resume.")
-        with open(output_file, "rb") as f:
+        print(f'Found existing results file: {output_file}. Attempting to resume.')
+        with open(output_file, 'rb') as f:
             all_results = pickle.load(f)
         for res in all_results:
-            completed_runs.add((res["gp_iter"], res["gp_lr"]))
-        print(f"Loaded {len(all_results)} completed runs. Skipping them.")
+            completed_runs.add((res['gp_iter'], res['gp_lr']))
+        print(f'Loaded {len(all_results)} completed runs. Skipping them.')
 
-    with open(args["input_file"], "rb") as f:
+    with open(args['input_file'], 'rb') as f:
         data = pickle.load(f)
 
     # We only use successful observations for training the GP
-    success_observations = data.get("success", [])
-    print(f"Loaded {len(success_observations)} successful observations.")
+    success_observations = data.get('success', [])
+    print(f'Loaded {len(success_observations)} successful observations.')
 
     # Split data based on the provided ratio
-    split_idx = int(len(success_observations) * args["train_split_ratio"])
+    split_idx = int(len(success_observations) * args['train_split_ratio'])
     train_observations = success_observations[:split_idx]
     validation_observations = success_observations[split_idx:]
 
     if not train_observations or not validation_observations:
         raise ValueError(
-            "Data split resulted in empty training or validation set. Check data and split ratio."
+            'Data split resulted in empty training or validation set. Check data and split ratio.'
         )
 
     print(
-        f"Using {len(train_observations)} for training and {len(validation_observations)} for validation."
+        f'Using {len(train_observations)} for training and {len(validation_observations)} for validation.'
     )
 
     # --- Define Hyperparameter Grid ---
@@ -359,7 +364,7 @@ if __name__ == "__main__":
     for iters in gp_iters_to_test:
         for lr in gp_lrs_to_test:
             if (iters, lr) in completed_runs:
-                print(f"Skipping already completed run: gp_iter={iters}, gp_lr={lr}")
+                print(f'Skipping already completed run: gp_iter={iters}, gp_lr={lr}')
                 continue
 
             try:
@@ -375,24 +380,24 @@ if __name__ == "__main__":
                 )
                 all_results.append(
                     {
-                        "gp_iter": iters,
-                        "gp_lr": lr,
-                        "score_metrics": score_metrics,
-                        "cost_metrics": cost_metrics,
-                        "score_loss_history": score_loss_hist,
-                        "cost_loss_history": cost_loss_hist,
-                        "success": True,
+                        'gp_iter': iters,
+                        'gp_lr': lr,
+                        'score_metrics': score_metrics,
+                        'cost_metrics': cost_metrics,
+                        'score_loss_history': score_loss_hist,
+                        'cost_loss_history': cost_loss_hist,
+                        'success': True,
                     }
                 )
             except:
-                all_results.append({"gp_iter": iters, "gp_lr": lr, "success": False})
+                all_results.append({'gp_iter': iters, 'gp_lr': lr, 'success': False})
 
             # Save results after each experiment to avoid data loss on interruption
-            with open(args["output_file"], "wb") as f:
+            with open(args['output_file'], 'wb') as f:
                 pickle.dump(all_results, f)
             print(
-                f"Saved {len(all_results)} experiment results to {args['output_file']}"
+                f'Saved {len(all_results)} experiment results to {args["output_file"]}'
             )
 
-    print(f"\nFinished. All evaluation results saved to {args['output_file']}")
+    print(f'\nFinished. All evaluation results saved to {args["output_file"]}')
     visualize_results(output_file)

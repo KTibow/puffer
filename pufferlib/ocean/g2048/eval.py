@@ -1,5 +1,6 @@
 from pufferlib import pufferl
 
+
 def evaluate(env_name, load_model_path):
     args = pufferl.load_config(env_name)
     args['vec']['num_envs'] = 1
@@ -28,19 +29,31 @@ def evaluate(env_name, load_model_path):
 
     # Get the estimates
     num_episodes = sum(stats['n'])
-    episode_lengths = sum(n * l for n, l in zip(stats['n'], stats['episode_length'])) / num_episodes
+    episode_lengths = (
+        sum(n * l for n, l in zip(stats['n'], stats['episode_length'])) / num_episodes
+    )
     max_tiles = sum(n * m for n, m in zip(stats['n'], stats['score'])) / num_episodes
-    merge_scores = sum(n * s for n, s in zip(stats['n'], stats['merge_score'])) / num_episodes
-    reached_32768 = sum(n * s for n, s in zip(stats['n'], stats['reached_32768'])) / num_episodes
-    reached_65536 = sum(n * s for n, s in zip(stats['n'], stats['reached_65536'])) / num_episodes
+    merge_scores = (
+        sum(n * s for n, s in zip(stats['n'], stats['merge_score'])) / num_episodes
+    )
+    reached_32768 = (
+        sum(n * s for n, s in zip(stats['n'], stats['reached_32768'])) / num_episodes
+    )
+    reached_65536 = (
+        sum(n * s for n, s in zip(stats['n'], stats['reached_65536'])) / num_episodes
+    )
 
-    print(f"Num episodes: {int(num_episodes)}")
-    print(f"Max tile avg: {max_tiles:.1f}")
+    print(f'Num episodes: {int(num_episodes)}')
+    print(f'Max tile avg: {max_tiles:.1f}')
     # The stats from vecenv are averaged across envs that were done in the same tick. Cannot get the single max.
-    print(f"Episode length -- Avg: {episode_lengths:.1f}, Max: {max(stats['episode_length']):.1f}")
-    print(f"Merge score -- Avg: {merge_scores:.1f}, Max: {max(stats['merge_score']):.1f}")
-    print(f"Reached 32768 prob: {reached_32768*100:.2f} %")
-    print(f"Reached 65536 prob: {reached_65536*100:.2f} %")
+    print(
+        f'Episode length -- Avg: {episode_lengths:.1f}, Max: {max(stats["episode_length"]):.1f}'
+    )
+    print(
+        f'Merge score -- Avg: {merge_scores:.1f}, Max: {max(stats["merge_score"]):.1f}'
+    )
+    print(f'Reached 32768 prob: {reached_32768 * 100:.2f} %')
+    print(f'Reached 65536 prob: {reached_65536 * 100:.2f} %')
 
     """
     # hidden 256: https://wandb.ai/kywch/pufferlib/runs/nvd0pfuj?nw=nwuserkywch
@@ -68,6 +81,7 @@ def evaluate(env_name, load_model_path):
     Reached 65536 prob: 14.75 %
     """
 
+
 def finetune(env_name, load_model_path):
     args = pufferl.load_config(env_name)
     args['load_model_path'] = load_model_path
@@ -86,6 +100,7 @@ def finetune(env_name, load_model_path):
     args['tag'] = 'pg2048'
 
     pufferl.train(env_name, args)
+
 
 if __name__ == '__main__':
     import os

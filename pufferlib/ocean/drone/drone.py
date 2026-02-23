@@ -4,6 +4,7 @@ import gymnasium
 import pufferlib
 from pufferlib.ocean.drone import binding
 
+
 class Drone(pufferlib.PufferEnv):
     def __init__(
         self,
@@ -26,7 +27,7 @@ class Drone(pufferlib.PufferEnv):
             low=-1, high=1, shape=(4,), dtype=np.float32
         )
 
-        self.num_agents = num_envs*num_drones
+        self.num_agents = num_envs * num_drones
         self.render_mode = render_mode
         self.report_interval = report_interval
         self.tick = 0
@@ -36,16 +37,18 @@ class Drone(pufferlib.PufferEnv):
 
         c_envs = []
         for i in range(num_envs):
-            c_envs.append(binding.env_init(
-                self.observations[i*num_drones:(i+1)*num_drones],
-                self.actions[i*num_drones:(i+1)*num_drones],
-                self.rewards[i*num_drones:(i+1)*num_drones],
-                self.terminals[i*num_drones:(i+1)*num_drones],
-                self.truncations[i*num_drones:(i+1)*num_drones],
-                i,
-                num_agents=num_drones,
-                max_rings=max_rings,
-            ))
+            c_envs.append(
+                binding.env_init(
+                    self.observations[i * num_drones : (i + 1) * num_drones],
+                    self.actions[i * num_drones : (i + 1) * num_drones],
+                    self.rewards[i * num_drones : (i + 1) * num_drones],
+                    self.terminals[i * num_drones : (i + 1) * num_drones],
+                    self.truncations[i * num_drones : (i + 1) * num_drones],
+                    i,
+                    num_agents=num_drones,
+                    max_rings=max_rings,
+                )
+            )
 
         self.c_envs = binding.vectorize(*c_envs)
 
@@ -74,6 +77,7 @@ class Drone(pufferlib.PufferEnv):
     def close(self):
         binding.vec_close(self.c_envs)
 
+
 def test_performance(timeout=10, atn_cache=1024):
     env = Drone(num_envs=1000)
     env.reset()
@@ -82,13 +86,15 @@ def test_performance(timeout=10, atn_cache=1024):
     actions = [env.action_space.sample() for _ in range(atn_cache)]
 
     import time
+
     start = time.time()
     while time.time() - start < timeout:
         atn = actions[tick % atn_cache]
         env.step(atn)
         tick += 1
 
-    print(f"SPS: {env.num_agents * tick / (time.time() - start)}")
+    print(f'SPS: {env.num_agents * tick / (time.time() - start)}')
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     test_performance()

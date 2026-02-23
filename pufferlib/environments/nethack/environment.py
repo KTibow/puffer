@@ -7,7 +7,7 @@ import functools
 import pufferlib
 import pufferlib.emulation
 import pufferlib.environments
-#from .wrapper import RenderCharImagesWithNumpyWrapper
+# from .wrapper import RenderCharImagesWithNumpyWrapper
 
 # Copyright (c) Facebook, Inc. and its affiliates.
 import enum
@@ -34,112 +34,112 @@ DEFAULT_MSG_PAD = 256
 DEFAULT_INV_PAD = 55
 DEFAULT_INVSTR_PAD = 80
 
-ASCII_SPACE = ord(" ")
-ASCII_y = ord("y")
-ASCII_n = ord("n")
-ASCII_ESC = nethack.C("[")
+ASCII_SPACE = ord(' ')
+ASCII_y = ord('y')
+ASCII_n = ord('n')
+ASCII_ESC = nethack.C('[')
 
 FULL_ACTIONS = nethack.USEFUL_ACTIONS
 
-SKIP_EXCEPTIONS = (b"eat", b"attack", b"direction?", b"pray")
+SKIP_EXCEPTIONS = (b'eat', b'attack', b'direction?', b'pray')
 
 NLE_SPACE_ITEMS = (
     (
-        "glyphs",
+        'glyphs',
         gym.spaces.Box(
-            low=0, high=nethack.MAX_GLYPH, **nethack.OBSERVATION_DESC["glyphs"]
+            low=0, high=nethack.MAX_GLYPH, **nethack.OBSERVATION_DESC['glyphs']
         ),
     ),
-    ("chars", gym.spaces.Box(low=0, high=255, **nethack.OBSERVATION_DESC["chars"])),
-    ("colors", gym.spaces.Box(low=0, high=15, **nethack.OBSERVATION_DESC["colors"])),
+    ('chars', gym.spaces.Box(low=0, high=255, **nethack.OBSERVATION_DESC['chars'])),
+    ('colors', gym.spaces.Box(low=0, high=15, **nethack.OBSERVATION_DESC['colors'])),
     (
-        "specials",
-        gym.spaces.Box(low=0, high=255, **nethack.OBSERVATION_DESC["specials"]),
+        'specials',
+        gym.spaces.Box(low=0, high=255, **nethack.OBSERVATION_DESC['specials']),
     ),
     (
-        "blstats",
+        'blstats',
         gym.spaces.Box(
             low=np.iinfo(np.int32).min,
             high=np.iinfo(np.int32).max,
-            **nethack.OBSERVATION_DESC["blstats"],
+            **nethack.OBSERVATION_DESC['blstats'],
         ),
     ),
     (
-        "message",
+        'message',
         gym.spaces.Box(
             low=np.iinfo(np.uint8).min,
             high=np.iinfo(np.uint8).max,
-            **nethack.OBSERVATION_DESC["message"],
+            **nethack.OBSERVATION_DESC['message'],
         ),
     ),
     (
-        "program_state",
+        'program_state',
         gym.spaces.Box(
             low=np.iinfo(np.int32).min,
             high=np.iinfo(np.int32).max,
-            **nethack.OBSERVATION_DESC["program_state"],
+            **nethack.OBSERVATION_DESC['program_state'],
         ),
     ),
     (
-        "internal",
+        'internal',
         gym.spaces.Box(
             low=np.iinfo(np.int32).min,
             high=np.iinfo(np.int32).max,
-            **nethack.OBSERVATION_DESC["internal"],
+            **nethack.OBSERVATION_DESC['internal'],
         ),
     ),
     (
-        "inv_glyphs",
+        'inv_glyphs',
         gym.spaces.Box(
             low=0,
             high=nethack.MAX_GLYPH,
-            **nethack.OBSERVATION_DESC["inv_glyphs"],
+            **nethack.OBSERVATION_DESC['inv_glyphs'],
         ),
     ),
     (
-        "inv_strs",
-        gym.spaces.Box(low=0, high=255, **nethack.OBSERVATION_DESC["inv_strs"]),
+        'inv_strs',
+        gym.spaces.Box(low=0, high=255, **nethack.OBSERVATION_DESC['inv_strs']),
     ),
     (
-        "inv_letters",
-        gym.spaces.Box(low=0, high=127, **nethack.OBSERVATION_DESC["inv_letters"]),
+        'inv_letters',
+        gym.spaces.Box(low=0, high=127, **nethack.OBSERVATION_DESC['inv_letters']),
     ),
     (
-        "inv_oclasses",
+        'inv_oclasses',
         gym.spaces.Box(
             low=0,
             high=nethack.MAXOCLASSES,
-            **nethack.OBSERVATION_DESC["inv_oclasses"],
+            **nethack.OBSERVATION_DESC['inv_oclasses'],
         ),
     ),
     (
-        "screen_descriptions",
+        'screen_descriptions',
         gym.spaces.Box(
-            low=0, high=127, **nethack.OBSERVATION_DESC["screen_descriptions"]
+            low=0, high=127, **nethack.OBSERVATION_DESC['screen_descriptions']
         ),
     ),
     (
-        "tty_chars",
-        gym.spaces.Box(low=0, high=255, **nethack.OBSERVATION_DESC["tty_chars"]),
+        'tty_chars',
+        gym.spaces.Box(low=0, high=255, **nethack.OBSERVATION_DESC['tty_chars']),
     ),
     (
-        "tty_colors",
+        'tty_colors',
         gym.spaces.Box(
             low=0,
             high=31,
-            **nethack.OBSERVATION_DESC["tty_colors"],
+            **nethack.OBSERVATION_DESC['tty_colors'],
         ),
     ),
     (
-        "tty_cursor",
-        gym.spaces.Box(low=0, high=255, **nethack.OBSERVATION_DESC["tty_cursor"]),
+        'tty_cursor',
+        gym.spaces.Box(low=0, high=255, **nethack.OBSERVATION_DESC['tty_cursor']),
     ),
     (
-        "misc",
+        'misc',
         gym.spaces.Box(
             low=np.iinfo(np.int32).min,
             high=np.iinfo(np.int32).max,
-            **nethack.OBSERVATION_DESC["misc"],
+            **nethack.OBSERVATION_DESC['misc'],
         ),
     ),
 )
@@ -162,7 +162,7 @@ class NLE(gym.Env):
     # but NetHack doesn't have any. Set it to 42, because
     # that is always the answer to life, the universe and
     # everything.
-    metadata = {"render_modes": ["human", "ansi", "full"], "render_fps": 42}
+    metadata = {'render_modes': ['human', 'ansi', 'full'], 'render_fps': 42}
 
     class StepStatus(enum.IntEnum):
         """Specifies the status of the terminal state.
@@ -184,23 +184,23 @@ class NLE(gym.Env):
         self,
         save_ttyrec_every=0,
         savedir=None,
-        character="mon-hum-neu-mal",
+        character='mon-hum-neu-mal',
         max_episode_steps=5000,
         observation_keys=(
-            "glyphs",
-            "chars",
-            "colors",
-            "specials",
-            "blstats",
-            "message",
-            "inv_glyphs",
-            "inv_strs",
-            "inv_letters",
-            "inv_oclasses",
-            "screen_descriptions",
-            "tty_chars",
-            "tty_colors",
-            "tty_cursor",
+            'glyphs',
+            'chars',
+            'colors',
+            'specials',
+            'blstats',
+            'message',
+            'inv_glyphs',
+            'inv_strs',
+            'inv_letters',
+            'inv_oclasses',
+            'screen_descriptions',
+            'tty_chars',
+            'tty_colors',
+            'tty_cursor',
         ),
         actions=None,
         options=None,
@@ -208,7 +208,7 @@ class NLE(gym.Env):
         allow_all_yn_questions=False,
         allow_all_modes=False,
         spawn_monsters=True,
-        render_mode="human",
+        render_mode='human',
     ):
         """Constructs a new NLE environment.
 
@@ -264,22 +264,22 @@ class NLE(gym.Env):
                 self.savedir = os.path.abspath(savedir)
                 os.makedirs(self.savedir)
             else:  # Empty savedir: We create our unique savedir inside nle_data/.
-                parent_dir = os.path.join(os.getcwd(), "nle_data")
+                parent_dir = os.path.join(os.getcwd(), 'nle_data')
                 os.makedirs(parent_dir, exist_ok=True)
                 self.savedir = tempfile.mkdtemp(
-                    prefix=time.strftime("%Y%m%d-%H%M%S_"), dir=parent_dir
+                    prefix=time.strftime('%Y%m%d-%H%M%S_'), dir=parent_dir
                 )
         except FileExistsError:
-            logger.info("Using existing savedir: %s", self.savedir)
+            logger.info('Using existing savedir: %s', self.savedir)
         else:
             if self.savedir:
-                logger.info("Created savedir: %s", self.savedir)
+                logger.info('Created savedir: %s', self.savedir)
             else:
-                logger.info("Not saving any NLE data.")
+                logger.info('Not saving any NLE data.')
 
         self._observation_keys = list(observation_keys)
 
-        if "internal" in self._observation_keys:
+        if 'internal' in self._observation_keys:
             logger.warn(
                 "The 'internal' NLE observation was requested. "
                 "This might contain data that shouldn't be available to agents."
@@ -287,21 +287,21 @@ class NLE(gym.Env):
 
         # Observations we always need.
         for key in (
-            "glyphs",
-            "blstats",
-            "tty_chars",
-            "message",
-            "program_state",
-            "internal",
+            'glyphs',
+            'blstats',
+            'tty_chars',
+            'message',
+            'program_state',
+            'internal',
         ):
             if key not in self._observation_keys:
                 self._observation_keys.append(key)
 
-        self._glyph_index = self._observation_keys.index("glyphs")
-        self._blstats_index = self._observation_keys.index("blstats")
-        self._message_index = self._observation_keys.index("message")
-        self._program_state_index = self._observation_keys.index("program_state")
-        self._internal_index = self._observation_keys.index("internal")
+        self._glyph_index = self._observation_keys.index('glyphs')
+        self._blstats_index = self._observation_keys.index('blstats')
+        self._message_index = self._observation_keys.index('message')
+        self._program_state_index = self._observation_keys.index('program_state')
+        self._internal_index = self._observation_keys.index('internal')
 
         self._original_observation_keys = observation_keys
         self._original_indices = tuple(
@@ -310,14 +310,14 @@ class NLE(gym.Env):
         self._info = {}
 
         if self.savedir:
-            ttyrec_version = ".ttyrec%i.bz2" % nethack.TTYREC_VERSION
-            ttyrec_prefix = "nle.%i.%%i" % os.getpid()
+            ttyrec_version = '.ttyrec%i.bz2' % nethack.TTYREC_VERSION
+            ttyrec_prefix = 'nle.%i.%%i' % os.getpid()
             self._ttyrec_pattern = os.path.join(
                 self.savedir, ttyrec_prefix + ttyrec_version
             )
             ttyrec = self._ttyrec_pattern % 0
             # Create an xlogfile with the same format of name.
-            scoreprefix = ttyrec.replace("0" + ttyrec_version, "")
+            scoreprefix = ttyrec.replace('0' + ttyrec_version, '')
         else:
             ttyrec = None
             scoreprefix = None
@@ -325,7 +325,7 @@ class NLE(gym.Env):
         self.nethack = nethack.Nethack(
             observation_keys=self._observation_keys,
             options=options,
-            playername="Agent-" + self.character,
+            playername='Agent-' + self.character,
             ttyrec=ttyrec,
             wizard=wizard,
             spawn_monsters=spawn_monsters,
@@ -356,8 +356,8 @@ class NLE(gym.Env):
 
     def _get_information(self, end_status):
         info = {}
-        info["end_status"] = end_status
-        info["is_ascended"] = self.nethack.how_done() == nethack.ASCENDED
+        info['end_status'] = end_status
+        info['is_ascended'] = self.nethack.how_done() == nethack.ASCENDED
         return info
 
     def print_action_meanings(self):
@@ -403,9 +403,7 @@ class NLE(gym.Env):
 
         end_status = self._get_end_status(observation, done)
 
-        reward = float(
-            self._reward_fn(old_score, action, observation, end_status)
-        )
+        reward = float(self._reward_fn(old_score, action, observation, end_status))
 
         if end_status and not done:
             # Try to end the game nicely.
@@ -458,10 +456,10 @@ class NLE(gym.Env):
             # Hence the defensive iteration above.
             # TODO: Detect this 'in_getlin' situation and handle it.
             self.last_observation, done = self.nethack.step(ASCII_SPACE)
-            assert not done, "Game ended unexpectedly"
+            assert not done, 'Game ended unexpectedly'
         else:
             warnings.warn(
-                "Not in moveloop after 1000 tries, aborting (ttyrec: %s)." % new_ttyrec,
+                'Not in moveloop after 1000 tries, aborting (ttyrec: %s).' % new_ttyrec,
                 stacklevel=2,
             )
             return self.reset(seed=seed, options=options)
@@ -519,21 +517,21 @@ class NLE(gym.Env):
         """Renders the state of the environment."""
         mode = self.render_mode
 
-        if mode == "human":
+        if mode == 'human':
             obs = self.last_observation
-            tty_chars = obs[self._observation_keys.index("tty_chars")]
-            tty_colors = obs[self._observation_keys.index("tty_colors")]
-            tty_cursor = obs[self._observation_keys.index("tty_cursor")]
+            tty_chars = obs[self._observation_keys.index('tty_chars')]
+            tty_colors = obs[self._observation_keys.index('tty_colors')]
+            tty_cursor = obs[self._observation_keys.index('tty_cursor')]
             print(nethack.tty_render(tty_chars, tty_colors, tty_cursor))
             return None
 
-        if mode == "full":
-            message_index = self._observation_keys.index("message")
+        if mode == 'full':
+            message_index = self._observation_keys.index('message')
             message = bytes(self.last_observation[message_index])
-            print(message[: message.index(b"\0")])
+            print(message[: message.index(b'\0')])
             try:
-                inv_strs_index = self._observation_keys.index("inv_strs")
-                inv_letters_index = self._observation_keys.index("inv_letters")
+                inv_strs_index = self._observation_keys.index('inv_strs')
+                inv_letters_index = self._observation_keys.index('inv_letters')
 
                 inv_strs = self.last_observation[inv_strs_index]
                 inv_letters = self.last_observation[inv_letters_index]
@@ -541,25 +539,25 @@ class NLE(gym.Env):
                     if np.all(line == 0):
                         break
                     print(
-                        letter.tobytes().decode("utf-8"), line.tobytes().decode("utf-8")
+                        letter.tobytes().decode('utf-8'), line.tobytes().decode('utf-8')
                     )
             except ValueError:  # inv_strs/letters not used.
                 pass
 
-            chars = self.last_observation[self._observation_keys.index("chars")]
-            colors = self.last_observation[self._observation_keys.index("colors")]
+            chars = self.last_observation[self._observation_keys.index('chars')]
+            colors = self.last_observation[self._observation_keys.index('colors')]
             print(nethack.tty_render(chars, colors))
             return None
 
-        if mode in ("ansi", "string"):  # Misnomer: This is the least ANSI of them all.
-            chars = self.last_observation[self._observation_keys.index("chars")]
+        if mode in ('ansi', 'string'):  # Misnomer: This is the least ANSI of them all.
+            chars = self.last_observation[self._observation_keys.index('chars')]
             # TODO: Why return a string here but print in the other branches?
-            return "\n".join([line.tobytes().decode("utf-8") for line in chars])
+            return '\n'.join([line.tobytes().decode('utf-8') for line in chars])
 
-        return "\nInvalid render mode: " + mode
+        return '\nInvalid render mode: ' + mode
 
     def __repr__(self):
-        return "<%s>" % self.__class__.__name__
+        return '<%s>' % self.__class__.__name__
 
     def _is_episode_end(self, observation):
         """Returns whether the episode has ended.
@@ -617,7 +615,7 @@ class NLE(gym.Env):
 
             break
         if steps > 10:
-            print(steps, "steps to get out of menus and windows.")
+            print(steps, 'steps to get out of menus and windows.')
         return observation, done
 
     def _quit_game(self, observation, done):
@@ -631,7 +629,7 @@ class NLE(gym.Env):
             return
 
         # Quit the game.
-        actions = [0x80 | ord("q"), ord("y")]  # M-q y
+        actions = [0x80 | ord('q'), ord('y')]  # M-q y
         for a in actions:
             observation, done = self.nethack.step(a)
 
@@ -643,26 +641,30 @@ class NLE(gym.Env):
         if not done:
             # Somehow, the above logic failed us.
             warnings.warn(
-                "Warning: smooth quitting of game failed, aborting.", stacklevel=2
+                'Warning: smooth quitting of game failed, aborting.', stacklevel=2
             )
+
 
 def env_creator(name='nethack'):
     return functools.partial(make, name)
 
+
 def make(name, buf=None, seed=0):
-    '''NetHack binding creation function'''
+    """NetHack binding creation function"""
     if name == 'nethack':
         name = 'NetHackScore-v0'
 
     nle = pufferlib.environments.try_import('nle')
     from nle.env.tasks import NetHackScore
-    #env = NetHackScore(observation_keys=['blstats', 'chars'])
+
+    # env = NetHackScore(observation_keys=['blstats', 'chars'])
     env = NLE(observation_keys=['blstats', 'chars'])
-    #env = RenderCharImagesWithNumpyWrapper(env)
-    #env = shimmy.GymV21CompatibilityV0(env=env)
+    # env = RenderCharImagesWithNumpyWrapper(env)
+    # env = shimmy.GymV21CompatibilityV0(env=env)
     env = NethackWrapper(env)
     env = pufferlib.EpisodeStats(env)
     return pufferlib.emulation.GymnasiumPufferEnv(env=env, buf=buf)
+
 
 class NethackWrapper:
     def __init__(self, env):
@@ -685,6 +687,8 @@ class NethackWrapper:
 
     def render(self):
         import nle
+
         chars = nle.nethack.tty_render(
-            self.obs['tty_chars'], self.obs['tty_colors'], self.obs['tty_cursor'])
+            self.obs['tty_chars'], self.obs['tty_colors'], self.obs['tty_cursor']
+        )
         return chars

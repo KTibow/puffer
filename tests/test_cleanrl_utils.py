@@ -16,9 +16,10 @@ import pufferlib.vectorization
 def test_cleanrl_utils():
     envs = pufferlib.vectorization.Serial(
         env_creator=pufferlib.environments.classic_control.env_creator('cartpole'),
-        num_envs=4, envs_per_worker=2
+        num_envs=4,
+        envs_per_worker=2,
     )
- 
+
     obs, info, _, _ = envs.reset()
 
     policy = pufferlib.models.Default(envs.driver_env)
@@ -28,10 +29,12 @@ def test_cleanrl_utils():
     obs = torch.tensor(obs).unsqueeze(1).float()
     actions = policy.get_action_and_value(obs)
 
+
 def shape_check(a1, l1, e1, a2, l2, e2):
     assert a1.shape == a2.shape
     assert l1.shape == l2.shape
     assert e1.shape == e2.shape
+
 
 def test_sample_logits():
     batch = 8
@@ -57,8 +60,9 @@ def test_sample_logits():
     a2, l2, e2 = pufferlib.cleanrl.sample_logits(md_logits, action=md_action)
     shape_check(a1, l1, e1, a2, l2, e2)
 
+
 def correct_sample_logits(logits, action=None):
-    '''A bad but known correct implementation'''
+    """A bad but known correct implementation"""
     if isinstance(logits, torch.Tensor):
         categorical = Categorical(logits=logits)
         if action is None:
@@ -77,11 +81,13 @@ def correct_sample_logits(logits, action=None):
     else:
         action = action.view(-1, action.shape[-1]).T
 
-    logprob = torch.stack([c.log_prob(a) for c, a in zip(multi_categorical, action)]).T.sum(1)
+    logprob = torch.stack(
+        [c.log_prob(a) for c, a in zip(multi_categorical, action)]
+    ).T.sum(1)
     entropy = torch.stack([c.entropy() for c in multi_categorical]).T.sum(1)
     return action, logprob, entropy
 
- 
+
 if __name__ == '__main__':
     test_cleanrl_utils()
-    #test_sample_logits()
+    # test_sample_logits()

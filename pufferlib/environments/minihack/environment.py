@@ -19,21 +19,25 @@ ALIASES = {
     'minihack': 'MiniHack-River-v0',
 }
 
+
 def env_creator(name='minihack'):
     return functools.partial(make, name)
 
+
 def make(name, buf=None, seed=0):
-    '''NetHack binding creation function'''
+    """NetHack binding creation function"""
     if name in ALIASES:
         name = ALIASES[name]
 
     import minihack
+
     pufferlib.environments.try_import('minihack')
     obs_key = minihack.base.MH_DEFAULT_OBS_KEYS + EXTRA_OBS_KEYS
     env = gym.make(name, observation_keys=obs_key)
     env = shimmy.GymV21CompatibilityV0(env=env)
     env = MinihackWrapper(env)
     return pufferlib.emulation.GymnasiumPufferEnv(env=env, buf=buf)
+
 
 class MinihackWrapper:
     def __init__(self, env):
@@ -56,7 +60,8 @@ class MinihackWrapper:
 
     def render(self):
         import nle
-        chars = nle.nethack.tty_render(
-            self.obs['tty_chars'], self.obs['tty_colors'], self.obs['tty_cursor'])
-        return chars
 
+        chars = nle.nethack.tty_render(
+            self.obs['tty_chars'], self.obs['tty_colors'], self.obs['tty_cursor']
+        )
+        return chars

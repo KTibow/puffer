@@ -10,16 +10,19 @@ PUFF_TEXT = [0, 187, 187, 255]
 
 ANSI_COLORS = [30, 34, 36, 90, 31, 97, 91, 37]
 
-COLORS = np.array([
-    [6, 24, 24 ],     # Background
-    [0, 0, 255],     # Food
-    [0, 128, 255],   # Corpse
-    [128, 128, 128], # Wall
-    [255, 0, 0],     # Snake
-    [255, 255, 255], # Snake
-    [255, 85, 85],     # Snake
-    [170, 170, 170], # Snake
-], dtype=np.uint8)
+COLORS = np.array(
+    [
+        [6, 24, 24],  # Background
+        [0, 0, 255],  # Food
+        [0, 128, 255],  # Corpse
+        [128, 128, 128],  # Wall
+        [255, 0, 0],  # Snake
+        [255, 255, 255],  # Snake
+        [255, 85, 85],  # Snake
+        [170, 170, 170],  # Snake
+    ],
+    dtype=np.uint8,
+)
 
 
 def any_key_down(keys):
@@ -28,11 +31,13 @@ def any_key_down(keys):
             return True
     return False
 
+
 def any_key_pressed(keys):
     for key in keys:
         if rl.IsKeyPressed(key):
             return True
     return False
+
 
 def cdata_to_numpy():
     image = rl.LoadImageFromScreen()
@@ -42,14 +47,20 @@ def cdata_to_numpy():
     channels = 4
     data_size = width * height * channels
     cdata = FFI().buffer(data_pointer, data_size)
-    return np.frombuffer(cdata, dtype=np.uint8
-        ).reshape((height, width, channels))
+    return np.frombuffer(cdata, dtype=np.uint8).reshape((height, width, channels))
+
 
 def make_texture(width, height):
     rendered = np.zeros((height, width, 4), dtype=np.uint8)
-    raylib_image = pyray.Image(FFI().from_buffer(rendered.data),
-        width, height, 1, pyray.PIXELFORMAT_UNCOMPRESSED_R8G8B8)
+    raylib_image = pyray.Image(
+        FFI().from_buffer(rendered.data),
+        width,
+        height,
+        1,
+        pyray.PIXELFORMAT_UNCOMPRESSED_R8G8B8,
+    )
     return rl.LoadTextureFromImage(raylib_image)
+
 
 class AnsiRender:
     def __init__(self, colors=None):
@@ -61,14 +72,16 @@ class AnsiRender:
         frame = ''
         for v in range(grid.shape[0]):
             lines = []
-            for line in grid[v-1:-v, v-1:-v]:
-                lines.append(''.join([
-                    f'\033[{ANSI_COLORS[val]}m██\033[0m' for val in line]))
+            for line in grid[v - 1 : -v, v - 1 : -v]:
+                lines.append(
+                    ''.join([f'\033[{ANSI_COLORS[val]}m██\033[0m' for val in line])
+                )
 
             frame = '\n'.join(lines)
 
         return frame
- 
+
+
 class RGBArrayRender:
     def __init__(self, colors=None, upscale=1):
         self.colors = colors
@@ -86,9 +99,18 @@ class RGBArrayRender:
 
         return frame
 
+
 class GridRender:
-    def __init__(self, width, height, screen_width=1080, screen_height=720,
-            colors=None, fps=60, name='PufferLib Raylib Renderer'):
+    def __init__(
+        self,
+        width,
+        height,
+        screen_width=1080,
+        screen_height=720,
+        colors=None,
+        fps=60,
+        name='PufferLib Raylib Renderer',
+    ):
         self.width = width
         self.height = height
         self.fps = fps
@@ -103,9 +125,9 @@ class GridRender:
         self.height = height
 
         camera = pyray.Camera2D()
-        camera.target= (width/2, height/2)
-        camera.rotation = 0.0 
-        camera.zoom = min(screen_width/width, screen_height/height)
+        camera.target = (width / 2, height / 2)
+        camera.rotation = 0.0
+        camera.zoom = min(screen_width / width, screen_height / height)
         self.camera = camera
 
         self.speed = min(screen_width, screen_height) / 100
@@ -127,8 +149,8 @@ class GridRender:
         screen_height = rl.GetScreenHeight()
 
         camera = self.camera
-        camera.offset.x = screen_width/2
-        camera.offset.y = screen_height/2
+        camera.offset.x = screen_width / 2
+        camera.offset.y = screen_height / 2
 
         fps = rl.GetFPS() or self.fps
         fps_mul = self.fps / fps
@@ -136,9 +158,9 @@ class GridRender:
         zoom_speed = 0.01 * fps_mul
 
         if any_key_down([rl.KEY_SPACE]):
-            camera.zoom = min(screen_width/self.width, screen_height/self.height)
-            camera.target.x = self.width/2
-            camera.target.y = self.height/2
+            camera.zoom = min(screen_width / self.width, screen_height / self.height)
+            camera.target.x = self.width / 2
+            camera.target.y = self.height / 2
 
         if any_key_down([rl.KEY_LEFT_SHIFT]):
             speed *= 3
@@ -188,20 +210,31 @@ class GridRender:
 
         return cdata_to_numpy()
 
+
 class GameRender:
-    def __init__(self, width, height, screen_width=1080, screen_height=720,
-            colors=None, name='PufferLib Raylib Game'):
-        self.client = GridRender(width, height,
-            screen_width, screen_height, colors, name)
+    def __init__(
+        self,
+        width,
+        height,
+        screen_width=1080,
+        screen_height=720,
+        colors=None,
+        name='PufferLib Raylib Game',
+    ):
+        self.client = GridRender(
+            width, height, screen_width, screen_height, colors, name
+        )
 
     def render(self, grid, x, y):
         self.client.camera.target.x = x
         self.client.camera.target.y = y
         return self.client.render(grid)
 
+
 class TestGameRender:
-    def __init__(self, width, height, colors=None,
-            tile_size=16, name='PufferLib Raylib Game'):
+    def __init__(
+        self, width, height, colors=None, tile_size=16, name='PufferLib Raylib Game'
+    ):
         assert width % tile_size == 0
         assert height % tile_size == 0
         assert (width // tile_size) % 2 == 1
@@ -244,4 +277,3 @@ if __name__ == '__main__':
     grid = np.random.randint(0, 3, (256, 256), dtype=np.uint8)
     while True:
         frame = renderer.render(grid)
-

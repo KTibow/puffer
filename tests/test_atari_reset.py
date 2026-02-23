@@ -3,9 +3,9 @@ from pufferlib.environments import atari
 
 
 def test_atari_reset():
-    '''Common way to bug the wrappers can be detected
+    """Common way to bug the wrappers can be detected
     by checking that the environment properly resets
-    after hitting 0 lives'''
+    after hitting 0 lives"""
     env = atari.env_creator('BreakoutNoFrameskip-v4')(4)
 
     obs, info = env.reset()
@@ -24,6 +24,7 @@ def test_atari_reset():
             obs = env.reset()
 
     assert len(lives) > 10
+
 
 if __name__ == '__main__':
     test_atari_reset()

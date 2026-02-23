@@ -7,14 +7,56 @@ import pufferlib
 from pufferlib.ocean.impulse_wars import binding
 
 
-discMoveToContMove = np.array([
-    [1.0, 0.707107, 0.0, -0.707107, -1.0, -0.707107, 0.0, 0.707107, 0.0],
-    [0.0, 0.707107, 1.0, 0.707107, 0.0, -0.707107, -1.0, -0.707107, 0.0],
-], dtype=np.float32)
-discAimToContAim = np.array([
-    [1.0, 0.92388, 0.707107, 0.382683, 0.0, -0.382683, -0.707107, -0.92388, -1.0, -0.92388, -0.707107, -0.382683, 0.0, 0.382683, 0.707107, 0.92388, 0.0],
-    [0.0, 0.382683, 0.707107, 0.92388, 1.0, 0.92388, 0.707107, 0.382683, 0.0, -0.382683, -0.707107, -0.92388, -1.0, -0.92388, -0.707107, -0.382683, 0.0],
-], dtype=np.float32)
+discMoveToContMove = np.array(
+    [
+        [1.0, 0.707107, 0.0, -0.707107, -1.0, -0.707107, 0.0, 0.707107, 0.0],
+        [0.0, 0.707107, 1.0, 0.707107, 0.0, -0.707107, -1.0, -0.707107, 0.0],
+    ],
+    dtype=np.float32,
+)
+discAimToContAim = np.array(
+    [
+        [
+            1.0,
+            0.92388,
+            0.707107,
+            0.382683,
+            0.0,
+            -0.382683,
+            -0.707107,
+            -0.92388,
+            -1.0,
+            -0.92388,
+            -0.707107,
+            -0.382683,
+            0.0,
+            0.382683,
+            0.707107,
+            0.92388,
+            0.0,
+        ],
+        [
+            0.0,
+            0.382683,
+            0.707107,
+            0.92388,
+            1.0,
+            0.92388,
+            0.707107,
+            0.382683,
+            0.0,
+            -0.382683,
+            -0.707107,
+            -0.92388,
+            -1.0,
+            -0.92388,
+            -0.707107,
+            -0.382683,
+            0.0,
+        ],
+    ],
+    dtype=np.float32,
+)
 
 
 class ImpulseWars(pufferlib.PufferEnv):
@@ -36,19 +78,21 @@ class ImpulseWars(pufferlib.PufferEnv):
         reward_energy_emptied: float = -0.75,
         reward_weapon_pickup: float = 0.5,
         reward_shield_break: float = 0.5,
-        reward_shot_hit_coef: float = 0.005, 
+        reward_shot_hit_coef: float = 0.005,
         reward_explosion_hit_coef: float = 0.005,
         seed: int = 0,
         render: bool = False,
         report_interval: int = 64,
-        buf = None,
+        buf=None,
     ):
         self.obsInfo = SimpleNamespace(**binding.get_consts(num_drones))
 
         if num_envs <= 0:
             raise ValueError("num_envs must be greater than 0")
         if num_drones > self.obsInfo.maxDrones or num_drones <= 0:
-            raise ValueError(f"num_drones must greater than 0 and less than or equal to {self.obsInfo.maxDrones}")
+            raise ValueError(
+                f"num_drones must greater than 0 and less than or equal to {self.obsInfo.maxDrones}"
+            )
         if num_agents > num_drones or num_agents <= 0:
             raise ValueError("num_agents must greater than 0 and less than or equal to num_drones")
         if enable_teams and (num_drones % 2 != 0 or num_drones <= 2):
@@ -135,11 +179,11 @@ class ImpulseWars(pufferlib.PufferEnv):
             self.actions[:] = actions
         else:
             contMove = discMoveToContMove[:, actions[:, 0]].T
-            contAim =  discAimToContAim[:, actions[:, 1]].T
+            contAim = discAimToContAim[:, actions[:, 1]].T
             contRest = actions[:, 2:].astype(np.float32)
             self.actions[:] = np.concatenate([contMove, contAim, contRest], axis=1)
 
-        self.tick += 1    
+        self.tick += 1
         binding.vec_step(self.c_envs)
 
         infos = []

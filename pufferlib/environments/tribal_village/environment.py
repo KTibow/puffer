@@ -22,12 +22,14 @@ def _import_tribal_village_env():
             sys.path.insert(0, str(fallback_dir))
         try:
             from tribal_village_env.environment import TribalVillageEnv  # type: ignore
+
             return TribalVillageEnv
         except ImportError:
             pass
 
     try:
         from tribal_village_env.environment import TribalVillageEnv  # type: ignore
+
         return TribalVillageEnv
     except ImportError as exc:
         raise ImportError("""Failed to import tribal-village environment. Install the package with

@@ -12,8 +12,9 @@ import pufferlib.environments
 def env_creator(name='Airstriker-Genesis'):
     return functools.partial(make, name)
 
+
 def make(name='Airstriker-Genesis', framestack=4, buf=None):
-    '''Atari creation function with default CleanRL preprocessing based on Stable Baselines3 wrappers'''
+    """Atari creation function with default CleanRL preprocessing based on Stable Baselines3 wrappers"""
     retro = pufferlib.environments.try_import('retro', 'stable-retro')
 
     from stable_baselines3.common.atari_wrappers import (
@@ -22,6 +23,7 @@ def make(name='Airstriker-Genesis', framestack=4, buf=None):
         FireResetEnv,
         MaxAndSkipEnv,
     )
+
     with pufferlib.utils.Suppress():
         env = retro.make(name)
 
@@ -32,7 +34,9 @@ def make(name='Airstriker-Genesis', framestack=4, buf=None):
     env = gym.wrappers.GrayScaleObservation(env)
     env = gym.wrappers.FrameStack(env, framestack)
     return pufferlib.emulation.GymnasiumPufferEnv(
-        env=env, postprocessor_cls=AtariFeaturizer, buf=buf)
+        env=env, postprocessor_cls=AtariFeaturizer, buf=buf
+    )
+
 
 class AtariFeaturizer(pufferlib.emulation.Postprocessor):
     def reset(self, obs):
@@ -40,8 +44,8 @@ class AtariFeaturizer(pufferlib.emulation.Postprocessor):
         self.epoch_length = 0
         self.done = False
 
-    #@property
-    #def observation_space(self):
+    # @property
+    # def observation_space(self):
     #    return gym.spaces.Box(0, 255, (1, 84, 84), dtype=np.uint8)
 
     def observation(self, obs):

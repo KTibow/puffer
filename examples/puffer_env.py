@@ -1,6 +1,7 @@
 import gymnasium
 import pufferlib.emulation
 
+
 class SamplePufferEnv(pufferlib.PufferEnv):
     def __init__(self, buf=None, seed=0):
         self.single_observation_space = gymnasium.spaces.Box(low=-1, high=1, shape=(1,))
@@ -16,6 +17,7 @@ class SamplePufferEnv(pufferlib.PufferEnv):
         self.observations[:] = self.observation_space.sample()
         infos = [{'infos': 'is a list of dictionaries'}]
         return self.observations, self.rewards, self.terminals, self.truncations, infos
+
 
 if __name__ == '__main__':
     puffer_env = SamplePufferEnv()

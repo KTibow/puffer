@@ -259,3 +259,6 @@ no-build-isolation-package = ["torch"]
 
 [tool.setuptools]
 license-files = ["LICENSE"]
+
+[tool.ruff.format]
+quote-style = "single"

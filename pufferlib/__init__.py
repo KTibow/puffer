@@ -1,6 +1,7 @@
 __version__ = 3.0
 
 import os
+
 path = __path__[0]
 link_to = os.path.join(path, 'resources')
 try:
@@ -10,10 +11,12 @@ except FileExistsError:
 
 # Silence noisy dependencies
 import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 # Silence noisy packages
 import sys
+
 original_stdout = sys.stdout
 original_stderr = sys.stderr
 sys.stdout = open(os.devnull, 'w')

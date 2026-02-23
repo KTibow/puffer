@@ -17,32 +17,51 @@ ALIASES = {
     'mani_peginsertion': 'PegInsertionSide-v1',
 }
 
+
 def env_creator(name='PickCube-v1', **kwargs):
     return functools.partial(make, name)
 
+
 def make(name, num_envs=1, render_mode='rgb_array', buf=None, seed=0, **kwargs):
-    '''Create an environment by name'''
+    """Create an environment by name"""
 
     if name in ALIASES:
         name = ALIASES[name]
 
-    return ManiPufferEnv(name, num_envs=num_envs, render_mode=render_mode, buf=buf, seed=seed, **kwargs)
+    return ManiPufferEnv(
+        name, num_envs=num_envs, render_mode=render_mode, buf=buf, seed=seed, **kwargs
+    )
+
 
 class ManiPufferEnv(pufferlib.PufferEnv):
-    def __init__(self, name, num_envs=1, solver_position_iterations=15,
-            sim_steps_per_control=5, control_freq=20, render_mode='rgb_array',
-            log_interval=16, buf=None, seed=0):
+    def __init__(
+        self,
+        name,
+        num_envs=1,
+        solver_position_iterations=15,
+        sim_steps_per_control=5,
+        control_freq=20,
+        render_mode='rgb_array',
+        log_interval=16,
+        buf=None,
+        seed=0,
+    ):
         sim_freq = int(sim_steps_per_control * control_freq)
         sim_config = {
-            'scene_config': {
-                'solver_position_iterations': solver_position_iterations
-            },
+            'scene_config': {'solver_position_iterations': solver_position_iterations},
             'sim_freq': sim_freq,
-            'control_freq': control_freq
+            'control_freq': control_freq,
         }
-        self.env = gym.make(name, reward_mode='delta', num_envs=num_envs,
-            render_mode=render_mode, sim_config=sim_config)
-        self.env = ManiSkillVectorEnv(self.env, auto_reset=True, ignore_terminations=False, record_metrics=True)
+        self.env = gym.make(
+            name,
+            reward_mode='delta',
+            num_envs=num_envs,
+            render_mode=render_mode,
+            sim_config=sim_config,
+        )
+        self.env = ManiSkillVectorEnv(
+            self.env, auto_reset=True, ignore_terminations=False, record_metrics=True
+        )
         self.agents_per_batch = num_envs
 
         obs_space = self.env.observation_space
@@ -69,18 +88,18 @@ class ManiPufferEnv(pufferlib.PufferEnv):
         self.env_id = np.arange(num_envs)
 
         self.logs = defaultdict(list)
-        
+
         super().__init__(buf)
 
     def _flatten_info(self, info):
-        if "final_info" in info:
-            mask = info["_final_info"]
-            for k, v in info["final_info"]["episode"].items():
+        if 'final_info' in info:
+            mask = info['_final_info']
+            for k, v in info['final_info']['episode'].items():
                 self.logs[k].append(v[mask].float().mean().item())
 
     def reset(self, seed=0):
         obs, info = self.env.reset()
-        #self.observations = torch.nan_to_num(obs)
+        # self.observations = torch.nan_to_num(obs)
         self.observations = torch.clamp(torch.nan_to_num(obs), -5, 5)
         self.observations = obs / 20.0
         self._flatten_info(info)
@@ -93,7 +112,7 @@ class ManiPufferEnv(pufferlib.PufferEnv):
             obs, _ = self.env.reset(options={'env_idx': collapsed})
 
         self.observations = torch.clamp(torch.nan_to_num(obs), -5, 5)
-        #self.observations = obs / 20.0 #torch.nan_to_num(obs)
+        # self.observations = obs / 20.0 #torch.nan_to_num(obs)
         self.rewards = reward
         self.terminated = terminated
         self.truncated = truncated

@@ -1,8 +1,8 @@
 import numpy as np
 import gymnasium
 import os
-#from raylib import rl
-#import heapq
+# from raylib import rl
+# import heapq
 
 import pufferlib
 from pufferlib.ocean.tactical import binding
@@ -28,7 +28,8 @@ class Tactical:
 
         # env spec (TODO)
         self.observation_space = gymnasium.spaces.Box(
-            low=0, high=2, shape=(10,), dtype=np.uint8)
+            low=0, high=2, shape=(10,), dtype=np.uint8
+        )
         self.action_space = gymnasium.spaces.Discrete(4)
         self.single_observation_space = self.observation_space
         self.single_action_space = self.action_space
@@ -37,15 +38,14 @@ class Tactical:
         self.emulated = None
         self.done = False
         self.buf = pufferlib.namespace(
-            observations = np.zeros(
-                (num_envs, 10), dtype=np.uint8),
-            rewards = np.zeros(num_envs, dtype=np.float32),
-            terminals = np.zeros(num_envs, dtype=bool),
-            truncations = np.zeros(num_envs, dtype=bool),
-            masks = np.ones(num_envs, dtype=bool),
+            observations=np.zeros((num_envs, 10), dtype=np.uint8),
+            rewards=np.zeros(num_envs, dtype=np.float32),
+            terminals=np.zeros(num_envs, dtype=bool),
+            truncations=np.zeros(num_envs, dtype=bool),
+            masks=np.ones(num_envs, dtype=bool),
         )
         self.actions = np.zeros(num_envs, dtype=np.uint32)
-        
+
         self.c_envs = binding.vec_init(
             self.buf.observations,
             self.actions,
@@ -54,7 +54,7 @@ class Tactical:
             self.buf.truncations,
             num_envs,
             seed,
-            num_obs=self.buf.observations.shape[1]
+            num_obs=self.buf.observations.shape[1],
         )
 
         # render
@@ -65,10 +65,12 @@ class Tactical:
         # map_path = 'pufferlib/environments/ocean/tactical/map_test.txt'
         # print(map_path)
         # self.load_map(map_path)
-    
+
     def load_map(self, filename):
         with open(filename, 'r') as f:
-            self.map_str = [line.strip() for line in f.read().strip().split('\n') if line[0] != ';']
+            self.map_str = [
+                line.strip() for line in f.read().strip().split('\n') if line[0] != ';'
+            ]
         self.map_width = len(self.map_str[0])
         self.map_height = len(self.map_str)
         self.map = np.zeros((self.map_height, self.map_width), dtype=np.uint8)
@@ -79,10 +81,13 @@ class Tactical:
     def reset(self, seed=None):
         self.c_envs = []
         for i in range(self.num_envs):
-            self.c_envs.append(binding.vec_init(
-                self.buf.observations[i],
-                self.actions[i:i+1],
-                self.buf.rewards[i:i+1]))
+            self.c_envs.append(
+                binding.vec_init(
+                    self.buf.observations[i],
+                    self.actions[i : i + 1],
+                    self.buf.rewards[i : i + 1],
+                )
+            )
             binding.vec_reset(self.c_envs[i])
 
         return self.buf.observations, {}
@@ -91,11 +96,16 @@ class Tactical:
         self.actions[:] = actions
         for c_env in self.c_envs:
             binding.vec_step(c_env)
-        
+
         info = {}
 
-        return (self.buf.observations, self.buf.rewards,
-            self.buf.terminals, self.buf.truncations, info)
+        return (
+            self.buf.observations,
+            self.buf.rewards,
+            self.buf.terminals,
+            self.buf.truncations,
+            info,
+        )
 
     def render(self):
         return binding.vec_render(self.c_envs, 0)
@@ -106,7 +116,8 @@ class Tactical:
         for c_env in self.c_envs:
             binding.vec_close(c_env)
 
-'''
+
+"""
 def a_star_search(map, start, goal):
     frontier = []
     heapq.heappush(frontier, (0, start))
@@ -488,7 +499,7 @@ class RaylibClient:
 
         rl.EndDrawing()
         return render.cdata_to_numpy()
-'''
+"""
 
 
 if __name__ == '__main__':
@@ -496,6 +507,7 @@ if __name__ == '__main__':
     env = Tactical(num_envs=1, render_mode='human')
     env.reset()
     import time
+
     t0 = time.time()
     steps = 0
     while not PROFILE or time.time() - t0 < 10:
@@ -505,4 +517,3 @@ if __name__ == '__main__':
                 break
         steps += 1
     print('SPS:', 1 * steps / (time.time() - t0))
-    

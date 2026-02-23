@@ -21,6 +21,7 @@ from stable_baselines3.common.atari_wrappers import (  # isort:skip
     NoopResetEnv,
 )
 
+
 @dataclass
 class Args:
     exp_name: str = 'cleanrl_ppo_atari'
@@ -33,7 +34,7 @@ class Args:
     """if toggled, cuda will be enabled by default"""
     track: bool = False
     """if toggled, this experiment will be tracked with Weights and Biases"""
-    wandb_project_name: str = "cleanRL"
+    wandb_project_name: str = 'cleanRL'
     """the wandb's project name"""
     wandb_entity: str = None
     """the entity (team) of wandb's project"""
@@ -41,7 +42,7 @@ class Args:
     """whether to capture videos of the agent performances (check out `videos` folder)"""
 
     # Algorithm specific arguments
-    env_id: str = "breakout"
+    env_id: str = 'breakout'
     """the id of the environment"""
     total_timesteps: int = 10000000
     """total timesteps of the experiments"""
@@ -88,18 +89,18 @@ class Args:
 def make_env(env_id, idx, capture_video, run_name):
     def thunk():
         if capture_video and idx == 0:
-            env = gym.make(env_id, render_mode="rgb_array")
-            env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
+            env = gym.make(env_id, render_mode='rgb_array')
+            env = gym.wrappers.RecordVideo(env, f'videos/{run_name}')
         else:
             env = gym.make(env_id)
         env = gym.wrappers.RecordEpisodeStatistics(env)
         if capture_video:
             if idx == 0:
-                env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
+                env = gym.wrappers.RecordVideo(env, f'videos/{run_name}')
         env = NoopResetEnv(env, noop_max=30)
         env = MaxAndSkipEnv(env, skip=4)
         env = EpisodicLifeEnv(env)
-        if "FIRE" in env.unwrapped.get_action_meanings():
+        if 'FIRE' in env.unwrapped.get_action_meanings():
             env = FireResetEnv(env)
         env = ClipRewardEnv(env)
         env = gym.wrappers.ResizeObservation(env, (84, 84))
@@ -147,12 +148,12 @@ class Agent(nn.Module):
         return action, probs.log_prob(action), probs.entropy(), self.critic(hidden)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     args, _ = tyro.cli(Args, return_unknown_args=True)
     args.batch_size = int(args.num_envs * args.num_steps)
     args.minibatch_size = int(args.batch_size // args.num_minibatches)
     args.num_iterations = args.total_timesteps // args.batch_size
-    run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
+    run_name = f'{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}'
     if args.track:
         import wandb
 
@@ -165,10 +166,11 @@ if __name__ == "__main__":
             monitor_gym=True,
             save_code=True,
         )
-    writer = SummaryWriter(f"runs/{run_name}")
+    writer = SummaryWriter(f'runs/{run_name}')
     writer.add_text(
-        "hyperparameters",
-        "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
+        'hyperparameters',
+        '|param|value|\n|-|-|\n%s'
+        % ('\n'.join([f'|{key}|{value}|' for key, value in vars(args).items()])),
     )
 
     # TRY NOT TO MODIFY: seeding
@@ -177,11 +179,12 @@ if __name__ == "__main__":
     torch.manual_seed(args.seed)
     torch.backends.cudnn.deterministic = args.torch_deterministic
 
-    device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
+    device = torch.device('cuda' if torch.cuda.is_available() and args.cuda else 'cpu')
 
     # PufferLib vectorization makes CleanRL ~65% faster!
     import pufferlib.vector
     import pufferlib.environments.atari
+
     envs = pufferlib.vector.make(
         pufferlib.environments.atari.env_creator(args.env_id),
         env_kwargs=dict(framestack=4),
@@ -193,8 +196,12 @@ if __name__ == "__main__":
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
     # ALGO Logic: Storage setup
-    obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
-    actions = torch.zeros((args.num_steps, args.num_envs) + envs.single_action_space.shape).to(device)
+    obs = torch.zeros(
+        (args.num_steps, args.num_envs) + envs.single_observation_space.shape
+    ).to(device)
+    actions = torch.zeros(
+        (args.num_steps, args.num_envs) + envs.single_action_space.shape
+    ).to(device)
     logprobs = torch.zeros((args.num_steps, args.num_envs)).to(device)
     rewards = torch.zeros((args.num_steps, args.num_envs)).to(device)
     dones = torch.zeros((args.num_steps, args.num_envs)).to(device)
@@ -212,7 +219,7 @@ if __name__ == "__main__":
         if args.anneal_lr:
             frac = 1.0 - (iteration - 1.0) / args.num_iterations
             lrnow = frac * args.learning_rate
-            optimizer.param_groups[0]["lr"] = lrnow
+            optimizer.param_groups[0]['lr'] = lrnow
 
         for step in range(0, args.num_steps):
             global_step += args.num_envs
@@ -227,16 +234,27 @@ if __name__ == "__main__":
             logprobs[step] = logprob
 
             # TRY NOT TO MODIFY: execute the game and log data.
-            next_obs, reward, terminations, truncations, infos = envs.step(action.cpu().numpy())
+            next_obs, reward, terminations, truncations, infos = envs.step(
+                action.cpu().numpy()
+            )
             next_done = np.logical_or(terminations, truncations)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
-            next_obs, next_done = torch.from_numpy(next_obs).to(device), torch.from_numpy(next_done).to(device).float()
+            next_obs, next_done = (
+                torch.from_numpy(next_obs).to(device),
+                torch.from_numpy(next_done).to(device).float(),
+            )
 
             for item in infos:
-                if "episode" in item.keys():
-                    print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
-                    writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
-                    writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
+                if 'episode' in item.keys():
+                    print(
+                        f'global_step={global_step}, episodic_return={item["episode"]["r"]}'
+                    )
+                    writer.add_scalar(
+                        'charts/episodic_return', item['episode']['r'], global_step
+                    )
+                    writer.add_scalar(
+                        'charts/episodic_length', item['episode']['l'], global_step
+                    )
                     break
 
         # bootstrap value if not done
@@ -251,8 +269,12 @@ if __name__ == "__main__":
                 else:
                     nextnonterminal = 1.0 - dones[t + 1]
                     nextvalues = values[t + 1]
-                delta = rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
-                advantages[t] = lastgaelam = delta + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
+                delta = (
+                    rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
+                )
+                advantages[t] = lastgaelam = (
+                    delta + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
+                )
             returns = advantages + values
 
         # flatten the batch
@@ -272,7 +294,9 @@ if __name__ == "__main__":
                 end = start + args.minibatch_size
                 mb_inds = b_inds[start:end]
 
-                _, newlogprob, entropy, newvalue = agent.get_action_and_value(b_obs[mb_inds], b_actions.long()[mb_inds])
+                _, newlogprob, entropy, newvalue = agent.get_action_and_value(
+                    b_obs[mb_inds], b_actions.long()[mb_inds]
+                )
                 logratio = newlogprob - b_logprobs[mb_inds]
                 ratio = logratio.exp()
 
@@ -280,15 +304,21 @@ if __name__ == "__main__":
                     # calculate approx_kl http://joschu.net/blog/kl-approx.html
                     old_approx_kl = (-logratio).mean()
                     approx_kl = ((ratio - 1) - logratio).mean()
-                    clipfracs += [((ratio - 1.0).abs() > args.clip_coef).float().mean().item()]
+                    clipfracs += [
+                        ((ratio - 1.0).abs() > args.clip_coef).float().mean().item()
+                    ]
 
                 mb_advantages = b_advantages[mb_inds]
                 if args.norm_adv:
-                    mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
+                    mb_advantages = (mb_advantages - mb_advantages.mean()) / (
+                        mb_advantages.std() + 1e-8
+                    )
 
                 # Policy loss
                 pg_loss1 = -mb_advantages * ratio
-                pg_loss2 = -mb_advantages * torch.clamp(ratio, 1 - args.clip_coef, 1 + args.clip_coef)
+                pg_loss2 = -mb_advantages * torch.clamp(
+                    ratio, 1 - args.clip_coef, 1 + args.clip_coef
+                )
                 pg_loss = torch.max(pg_loss1, pg_loss2).mean()
 
                 # Value loss
@@ -322,16 +352,20 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
-        writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
-        writer.add_scalar("losses/value_loss", v_loss.item(), global_step)
-        writer.add_scalar("losses/policy_loss", pg_loss.item(), global_step)
-        writer.add_scalar("losses/entropy", entropy_loss.item(), global_step)
-        writer.add_scalar("losses/old_approx_kl", old_approx_kl.item(), global_step)
-        writer.add_scalar("losses/approx_kl", approx_kl.item(), global_step)
-        writer.add_scalar("losses/clipfrac", np.mean(clipfracs), global_step)
-        writer.add_scalar("losses/explained_variance", explained_var, global_step)
-        print("SPS:", int(global_step / (time.time() - start_time)))
-        writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
+        writer.add_scalar(
+            'charts/learning_rate', optimizer.param_groups[0]['lr'], global_step
+        )
+        writer.add_scalar('losses/value_loss', v_loss.item(), global_step)
+        writer.add_scalar('losses/policy_loss', pg_loss.item(), global_step)
+        writer.add_scalar('losses/entropy', entropy_loss.item(), global_step)
+        writer.add_scalar('losses/old_approx_kl', old_approx_kl.item(), global_step)
+        writer.add_scalar('losses/approx_kl', approx_kl.item(), global_step)
+        writer.add_scalar('losses/clipfrac', np.mean(clipfracs), global_step)
+        writer.add_scalar('losses/explained_variance', explained_var, global_step)
+        print('SPS:', int(global_step / (time.time() - start_time)))
+        writer.add_scalar(
+            'charts/SPS', int(global_step / (time.time() - start_time)), global_step
+        )
 
     envs.close()
     writer.close()

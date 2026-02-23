@@ -6,15 +6,16 @@ import pufferlib.vector
 from pufferlib.exceptions import APIUsageError, InvalidAgentError
 from pufferlib.environments import test
 
+
 def print_if(e, print_errors):
     if print_errors:
         print(type(e).__name__ + ':', e)
         print('#################')
         print()
 
+
 def test_gymnasium_api(print_errors=False):
-    env = pufferlib.emulation.GymnasiumPufferEnv(
-        env_creator=test.GymnasiumTestEnv)
+    env = pufferlib.emulation.GymnasiumPufferEnv(env_creator=test.GymnasiumTestEnv)
 
     try:
         env.step({})
@@ -39,9 +40,9 @@ def test_gymnasium_api(print_errors=False):
     action = env.action_space.sample()
     obs, rewards, terminals, truncateds, infos = env.step(action)
 
+
 def test_pettingzoo_api_usage(print_errors=False):
-    env = pufferlib.emulation.PettingZooPufferEnv(
-        env_creator=test.PettingZooTestEnv)
+    env = pufferlib.emulation.PettingZooPufferEnv(env_creator=test.PettingZooTestEnv)
 
     try:
         env.step({})
@@ -68,7 +69,9 @@ def test_pettingzoo_api_usage(print_errors=False):
     obs = env.reset()
 
     try:
-        bad_actions = {agent: env.observation_space(agent).sample() for agent in env.agents}
+        bad_actions = {
+            agent: env.observation_space(agent).sample() for agent in env.agents
+        }
         env.step(bad_actions)
     except APIUsageError as e:
         print_if(e, print_errors)
@@ -78,24 +81,27 @@ def test_pettingzoo_api_usage(print_errors=False):
     except InvalidAgentError as e:
         print_if(e, print_errors)
 
-
     actions = {agent: env.action_space(agent).sample() for agent in env.agents}
     obs, rewards, terminals, truncateds, infos = env.step(actions)
 
+
 def test_vectorization_api(print_errors=False):
     gymnasium_creator = lambda: pufferlib.emulation.GymnasiumPufferEnv(
-        env_creator=test.GymnasiumTestEnv)
+        env_creator=test.GymnasiumTestEnv
+    )
     pettingzoo_creator = lambda: pufferlib.emulation.PettingZooPufferEnv(
-        env_creator=test.PettingZooTestEnv)
+        env_creator=test.PettingZooTestEnv
+    )
 
     for backend in [
         pufferlib.vector.Serial,
         pufferlib.vector.Multiprocessing,
-        pufferlib.vector.Ray]:
-            
+        pufferlib.vector.Ray,
+    ]:
         for creator in [gymnasium_creator, pettingzoo_creator]:
-            vec = pufferlib.vector.make(creator, num_envs=6,
-                num_workers=3, backend=backend)
+            vec = pufferlib.vector.make(
+                creator, num_envs=6, num_workers=3, backend=backend
+            )
 
             # Sync API
             _, _ = vec.reset()
@@ -104,8 +110,9 @@ def test_vectorization_api(print_errors=False):
             vec.close()
 
             # Async API
-            vec = pufferlib.vector.make(creator, num_envs=8,
-                num_workers=4, batch_size=4, backend=backend)
+            vec = pufferlib.vector.make(
+                creator, num_envs=8, num_workers=4, batch_size=4, backend=backend
+            )
             vec.async_reset()
             actions = vec.action_space.sample()
             _, _, _, _, _, _, _ = vec.recv()
@@ -118,14 +125,14 @@ def test_vectorization_api(print_errors=False):
             print_if(e, print_errors)
 
         try:
-            vec = pufferlib.vector.make(gymnasium_creator,
-                num_envs=3, num_workers=2)
+            vec = pufferlib.vector.make(gymnasium_creator, num_envs=3, num_workers=2)
         except APIUsageError as e:
             print_if(e, print_errors)
 
         try:
-            vec = pufferlib.vector.make(gymnasium_creator,
-                num_envs=4, num_workers=2, batch_size=3)
+            vec = pufferlib.vector.make(
+                gymnasium_creator, num_envs=4, num_workers=2, batch_size=3
+            )
         except APIUsageError as e:
             print_if(e, print_errors)
 

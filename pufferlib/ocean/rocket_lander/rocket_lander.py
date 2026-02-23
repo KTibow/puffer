@@ -1,9 +1,9 @@
-'''High-perf Pong
+"""High-perf Pong
 
 Inspired from https://gist.github.com/Yttrmin/18ecc3d2d68b407b4be1
 & https://jair.org/index.php/jair/article/view/10819/25823
 & https://www.youtube.com/watch?v=PSQt5KGv7Vk
-'''
+"""
 
 import numpy as np
 import gymnasium
@@ -11,10 +11,12 @@ import gymnasium
 import pufferlib
 from pufferlib.ocean.rocket_lander.cy_rocket_lander import CyRocketLander
 
+
 class RocketLander(pufferlib.PufferEnv):
     def __init__(self, num_envs=1, render_mode=None, report_interval=32, buf=None):
-        self.single_observation_space = gymnasium.spaces.Box(low=0, high=1,
-            shape=(6,), dtype=np.float32)
+        self.single_observation_space = gymnasium.spaces.Box(
+            low=0, high=1, shape=(6,), dtype=np.float32
+        )
         self.single_action_space = gymnasium.spaces.Discrete(4)
         self.render_mode = render_mode
         self.num_agents = num_envs
@@ -22,9 +24,15 @@ class RocketLander(pufferlib.PufferEnv):
 
         super().__init__(buf)
         self.float_actions = np.zeros((num_envs, 3), dtype=np.float32)
-        self.c_envs = CyRocketLander(self.observations, self.float_actions, self.rewards,
-            self.terminals, self.truncations, num_envs)
- 
+        self.c_envs = CyRocketLander(
+            self.observations,
+            self.float_actions,
+            self.rewards,
+            self.terminals,
+            self.truncations,
+            num_envs,
+        )
+
     def reset(self, seed=None):
         self.tick = 0
         self.c_envs.reset()
@@ -44,14 +52,14 @@ class RocketLander(pufferlib.PufferEnv):
                 info.append(log)
 
         self.tick += 1
-        return (self.observations, self.rewards,
-            self.terminals, self.truncations, info)
+        return (self.observations, self.rewards, self.terminals, self.truncations, info)
 
     def render(self):
         self.c_envs.render()
 
     def close(self):
         self.c_envs.close()
+
 
 def test_performance(timeout=10, atn_cache=1024):
     env = RocketLander(num_envs=1000)
@@ -61,6 +69,7 @@ def test_performance(timeout=10, atn_cache=1024):
     actions = np.random.randint(0, 2, (atn_cache, env.num_envs))
 
     import time
+
     start = time.time()
     while time.time() - start < timeout:
         atn = actions[tick % atn_cache]
@@ -68,6 +77,7 @@ def test_performance(timeout=10, atn_cache=1024):
         tick += 1
 
     print(f'SPS: %f', env.num_envs * tick / (time.time() - start))
+
 
 if __name__ == '__main__':
     test_performance()

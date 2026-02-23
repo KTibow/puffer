@@ -12,7 +12,7 @@ from pufferlib.models import LSTMWrapper as Recurrent
 from pufferlib.models import Default as Policy
 
 
-'''
+"""
 class Recurrent(pufferlib.models.LSTMWrapper):
     def __init__(self, env, policy, input_size=256, hidden_size=256, num_layers=1):
         super().__init__(env, policy, input_size, hidden_size, num_layers)
@@ -70,4 +70,4 @@ class Policy(nn.Module):
         value = self.critic(hidden)
         action = self.actor(hidden)
         return action, value
-'''
+"""

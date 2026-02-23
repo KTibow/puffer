@@ -6,7 +6,9 @@ import pufferlib.models
 Recurrent = pufferlib.models.LSTMWrapper
 
 from pufferlib.models import Default as Policy
+
 SymbolicPolicy = Policy
+
 
 class PixelsPolicy(nn.Module):
     def __init__(self, env, cnn_channels=32, hidden_size=128, **kwargs):
@@ -15,15 +17,21 @@ class PixelsPolicy(nn.Module):
         self.map_encoder = nn.Sequential(
             pufferlib.pytorch.layer_init(nn.Conv2d(3, cnn_channels, 8, stride=4)),
             nn.ReLU(),
-            pufferlib.pytorch.layer_init(nn.Conv2d(cnn_channels, cnn_channels, 4, stride=2)),
+            pufferlib.pytorch.layer_init(
+                nn.Conv2d(cnn_channels, cnn_channels, 4, stride=2)
+            ),
             nn.ReLU(),
             nn.Flatten(),
         )
         self.proj = nn.Sequential(
-            pufferlib.pytorch.layer_init(nn.Linear(14 * 14 * cnn_channels, hidden_size)),
+            pufferlib.pytorch.layer_init(
+                nn.Linear(14 * 14 * cnn_channels, hidden_size)
+            ),
             nn.ReLU(),
         )
-        self.actor = pufferlib.pytorch.layer_init(nn.Linear(hidden_size, env.single_action_space.n), std=0.01)
+        self.actor = pufferlib.pytorch.layer_init(
+            nn.Linear(hidden_size, env.single_action_space.n), std=0.01
+        )
         self.value_fn = pufferlib.pytorch.layer_init(nn.Linear(hidden_size, 1), std=1)
 
         self.is_continuous = False

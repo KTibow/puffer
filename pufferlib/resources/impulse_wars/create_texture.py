@@ -13,25 +13,24 @@ img[:] = PUFF_BG
 b = 6
 
 img[:128, :b] = PUFF_CYAN
-img[:128, 128-b:128] = PUFF_CYAN
+img[:128, 128 - b : 128] = PUFF_CYAN
 img[:b, :128] = PUFF_CYAN
-img[128-b:128, :128] = PUFF_CYAN
+img[128 - b : 128, :128] = PUFF_CYAN
 
-img[:128, 128:128+b] = PUFF_RED
-img[:128, 256-b:256] = PUFF_RED
+img[:128, 128 : 128 + b] = PUFF_RED
+img[:128, 256 - b : 256] = PUFF_RED
 img[:b, 128:256] = PUFF_RED
-img[128-b:128, 128:256] = PUFF_RED
+img[128 - b : 128, 128:256] = PUFF_RED
 
 img[128:256, :b] = PUFF_YELLOW
-img[128:256, 128-b:128] = PUFF_YELLOW
-img[128:128+b, :128] = PUFF_YELLOW
-img[256-b:256, :128] = PUFF_YELLOW
+img[128:256, 128 - b : 128] = PUFF_YELLOW
+img[128 : 128 + b, :128] = PUFF_YELLOW
+img[256 - b : 256, :128] = PUFF_YELLOW
 
 img[128:256, 128:256] = (0, 40, 0)
-img[128:256, 128:128+b] = PUFF_GREEN
-img[128:256, 256-b:256] = PUFF_GREEN
-img[128:128+b, 128:256] = PUFF_GREEN
-img[256-b:256, 128:256] = PUFF_GREEN
+img[128:256, 128 : 128 + b] = PUFF_GREEN
+img[128:256, 256 - b : 256] = PUFF_GREEN
+img[128 : 128 + b, 128:256] = PUFF_GREEN
+img[256 - b : 256, 128:256] = PUFF_GREEN
 
 Image.fromarray(img).save('wall_texture_map.png')
-
