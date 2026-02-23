@@ -7,7 +7,7 @@ pufferlib/puffernet.c
 pufferlib/extensions/hip/
 
 # Raylib
-raylib_wasm/
+raylib*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
