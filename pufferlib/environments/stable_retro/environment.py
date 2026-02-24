@@ -1,8 +1,8 @@
+import functools
 from pdb import set_trace as T
-import numpy as np
 
 import gymnasium as gym
-import functools
+import numpy as np
 
 import pufferlib
 import pufferlib.emulation

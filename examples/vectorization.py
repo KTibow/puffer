@@ -1,4 +1,5 @@
 import gymnasium
+
 import pufferlib.emulation
 import pufferlib.vector
 

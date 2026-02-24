@@ -1,14 +1,13 @@
+import inspect
+import warnings
 from pdb import set_trace as T
 
-import numpy as np
-import warnings
-
 import gymnasium
-import inspect
+import numpy as np
 
 import pufferlib
 import pufferlib.spaces
-from pufferlib.spaces import Discrete, Tuple, Dict
+from pufferlib.spaces import Dict, Discrete, Tuple
 
 
 def emulate(struct, sample):

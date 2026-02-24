@@ -1,4 +1,5 @@
 from pdb import set_trace as T
+
 import numpy as np
 
 import pufferlib.spaces
@@ -62,7 +63,7 @@ def fill_with_sample(arr, sample):
         arr[()] = sample
 
 
-from gymnasium.spaces import Tuple, Dict, Box
+from gymnasium.spaces import Box, Dict, Tuple
 
 test_space = Tuple(
     [

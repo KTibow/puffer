@@ -1,13 +1,12 @@
+import functools
 from pdb import set_trace as T
 
 import gym
 import shimmy
-import functools
 
 import pufferlib
 import pufferlib.emulation
 import pufferlib.environments
-
 
 EXTRA_OBS_KEYS = [
     'tty_chars',

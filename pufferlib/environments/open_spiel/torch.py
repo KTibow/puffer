@@ -1,6 +1,6 @@
 from pdb import set_trace as T
-import numpy as np
 
+import numpy as np
 import torch
 from torch import nn
 

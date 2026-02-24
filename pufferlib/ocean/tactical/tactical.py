@@ -1,11 +1,13 @@
-import numpy as np
-import gymnasium
 import os
+
+import gymnasium
+import numpy as np
+
 # from raylib import rl
 # import heapq
-
 import pufferlib
 from pufferlib.ocean.tactical import binding
+
 # from pufferlib.environments.ocean import render
 
 EMPTY = 0

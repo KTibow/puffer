@@ -30,11 +30,9 @@ import os
 import cv2
 import gym
 import numpy as np
-from numba import njit
 from nle import nethack
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
+from numba import njit
+from PIL import Image, ImageDraw, ImageFont
 
 # import render_utils
 

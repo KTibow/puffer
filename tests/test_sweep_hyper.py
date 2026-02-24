@@ -2,9 +2,8 @@ import os
 import pickle
 
 import numpy as np
-import torch
-
 import pandas as pd
+import torch
 
 try:
     import matplotlib.pyplot as plt

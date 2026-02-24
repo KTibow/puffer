@@ -1,8 +1,9 @@
 import sys
+
 import gym
+import pufferlib.utils
 
 import pufferlib
-import pufferlib.utils
 
 
 def test_suppress():

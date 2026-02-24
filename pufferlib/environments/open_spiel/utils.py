@@ -1,7 +1,7 @@
 from pdb import set_trace as T
-import numpy as np
 
 import gymnasium
+import numpy as np
 
 from pufferlib import namespace
 

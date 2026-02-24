@@ -1,4 +1,5 @@
 import gymnasium
+
 import pufferlib.emulation
 
 
@@ -33,6 +34,7 @@ if __name__ == '__main__':
     print(f'You can unflatten observations with numpy:\n{observation}')
 
     import torch
+
     import pufferlib.pytorch
 
     flat_torch_observation = torch.from_numpy(flat_observation)

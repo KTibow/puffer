@@ -1,9 +1,9 @@
-from pdb import set_trace as T
-import numpy as np
-import time
-
 import selectors
-from multiprocessing import Process, Pipe
+import time
+from multiprocessing import Pipe, Process
+from pdb import set_trace as T
+
+import numpy as np
 
 
 def worker_process(envs_per_worker, delay_mean, delay_std, send_pipe, recv_pipe):

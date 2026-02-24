@@ -1,9 +1,9 @@
-from pdb import set_trace as T
-import numpy as np
-
-import warnings
-import shimmy
 import functools
+import warnings
+from pdb import set_trace as T
+
+import numpy as np
+import shimmy
 
 import pufferlib.emulation
 import pufferlib.environments

@@ -182,8 +182,8 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() and args.cuda else 'cpu')
 
     # PufferLib vectorization makes CleanRL ~65% faster!
-    import pufferlib.vector
     import pufferlib.environments.atari
+    import pufferlib.vector
 
     envs = pufferlib.vector.make(
         pufferlib.environments.atari.env_creator(args.env_id),

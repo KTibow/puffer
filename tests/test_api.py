@@ -1,9 +1,10 @@
 from pdb import set_trace as T
 
+from pufferlib.exceptions import APIUsageError, InvalidAgentError
+
 import pufferlib
 import pufferlib.emulation
 import pufferlib.vector
-from pufferlib.exceptions import APIUsageError, InvalidAgentError
 from pufferlib.environments import test
 
 

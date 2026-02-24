@@ -1,14 +1,14 @@
-from pdb import set_trace as T
-import numpy as np
-from types import SimpleNamespace
-import gymnasium
-import pettingzoo
 import time
+from pdb import set_trace as T
+from types import SimpleNamespace
 
-from pufferlib.ocean.nmmo3 import binding
+import gymnasium
+import numpy as np
+import pettingzoo
+
 # import binding
-
 import pufferlib
+from pufferlib.ocean.nmmo3 import binding
 
 
 class NMMO3(pufferlib.PufferEnv):

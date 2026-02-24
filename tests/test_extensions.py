@@ -1,18 +1,18 @@
+import timeit
 from pdb import set_trace as T
 
-import numpy as np
-import timeit
 import gym
+import numpy as np
+import pufferlib.utils
 
 from pufferlib.emulation import (
-    flatten_structure,
-    flatten_space,
-    flatten,
-    unflatten,
     concatenate,
+    flatten,
+    flatten_space,
+    flatten_structure,
     split,
+    unflatten,
 )
-import pufferlib.utils
 
 
 def test_pack_unpack():

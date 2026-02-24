@@ -1,11 +1,13 @@
 """A simple sample environment. Use this as a template for your own envs."""
 
+import random
+import time
+
 import gymnasium
 import numpy as np
-import random
+
 import pufferlib
 from pufferlib.ocean.terraform import binding
-import time
 
 OBS_SIZE = 11
 

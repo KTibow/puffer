@@ -11,7 +11,6 @@ from torch.distributions.utils import logits_to_probs
 import pufferlib
 import pufferlib.models
 
-
 numpy_to_torch_dtype_dict = {
     np.dtype('float64'): torch.float64,
     np.dtype('float32'): torch.float32,

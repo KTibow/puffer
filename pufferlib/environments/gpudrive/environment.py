@@ -1,9 +1,9 @@
 import os
-import numpy as np
 from pathlib import Path
-import torch
-import gymnasium
 
+import gymnasium
+import numpy as np
+import torch
 from pygpudrive.env.config import (
     EnvConfig,
     RenderConfig,

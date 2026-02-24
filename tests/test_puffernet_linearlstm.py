@@ -1,10 +1,9 @@
-import torch
 import numpy as np
-
-from pufferlib.ocean import env_creator
-from pufferlib.models import Default, LSTMWrapper
-
 import pyximport
+import torch
+
+from pufferlib.models import Default, LSTMWrapper
+from pufferlib.ocean import env_creator
 
 pyximport.install(
     setup_args={

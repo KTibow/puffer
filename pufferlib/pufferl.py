@@ -7,31 +7,30 @@ import warnings
 
 warnings.filterwarnings('error', category=RuntimeWarning)
 
-import os
-import sys
-import glob
+import argparse
 import ast
-import time
+import configparser
+import glob
+import importlib
+import os
 import random
 import shutil
-import argparse
-import importlib
-import configparser
-from threading import Thread
+import sys
+import time
 from collections import defaultdict, deque
+from threading import Thread
 
 import numpy as np
 import psutil
-
 import torch
 import torch.distributed
-from torch.distributed.elastic.multiprocessing.errors import record
 import torch.utils.cpp_extension
+from torch.distributed.elastic.multiprocessing.errors import record
 
 import pufferlib
+import pufferlib.pytorch
 import pufferlib.sweep
 import pufferlib.vector
-import pufferlib.pytorch
 
 try:
     from pufferlib import _C
@@ -42,8 +41,8 @@ except ImportError:
 
 import rich
 import rich.traceback
-from rich.table import Table
 from rich.console import Console
+from rich.table import Table
 from rich_argparse import RichHelpFormatter
 
 rich.traceback.install(show_locals=False)
@@ -1285,7 +1284,7 @@ def profile(args=None, env_name=None, vecenv=None, policy=None):
     )
 
     import torchvision.models as models
-    from torch.profiler import profile, record_function, ProfilerActivity
+    from torch.profiler import ProfilerActivity, profile, record_function
 
     with profile(
         activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True

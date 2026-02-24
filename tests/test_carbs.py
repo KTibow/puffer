@@ -1,15 +1,15 @@
 import numpy as np
-
-from carbs import CARBS
-from carbs import CARBSParams
-from carbs import LinearSpace
-from carbs import LogSpace
-from carbs import LogitSpace
-from carbs import ObservationInParam
-from carbs import ParamDictType
-from carbs import Param
-
 import wandb
+from carbs import (
+    CARBS,
+    CARBSParams,
+    LinearSpace,
+    LogitSpace,
+    LogSpace,
+    ObservationInParam,
+    Param,
+    ParamDictType,
+)
 
 
 class SyntheticExperiment:

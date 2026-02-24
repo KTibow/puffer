@@ -3,8 +3,8 @@ High-perf Boids
 Inspired by https://people.ece.cornell.edu/land/courses/ece4760/labs/s2021/Boids/Boids.html
 """
 
-import numpy as np
 import gymnasium
+import numpy as np
 
 import pufferlib
 from pufferlib.ocean.boids import binding

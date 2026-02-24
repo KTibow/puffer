@@ -1,7 +1,8 @@
-import gymnasium
-from gymnasium.envs import classic_control
 import functools
+
+import gymnasium
 import numpy as np
+from gymnasium.envs import classic_control
 
 import pufferlib
 import pufferlib.emulation

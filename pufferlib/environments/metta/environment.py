@@ -1,13 +1,13 @@
 import functools
-import numpy as np
+
 import gymnasium
+import numpy as np
+from metta.mettagrid.curriculum.core import SingleTaskCurriculum
+from metta.mettagrid.mettagrid_env import MettaGridEnv
+from metta.mettagrid.replay_writer import ReplayWriter
+from omegaconf import OmegaConf
 
 import pufferlib
-
-from omegaconf import OmegaConf
-from metta.mettagrid.mettagrid_env import MettaGridEnv
-from metta.mettagrid.curriculum.core import SingleTaskCurriculum
-from metta.mettagrid.replay_writer import ReplayWriter
 
 
 def env_creator(name='metta'):

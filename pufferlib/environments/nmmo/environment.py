@@ -1,12 +1,13 @@
-from pdb import set_trace as T
-import numpy as np
 import functools
+from pdb import set_trace as T
+
+import numpy as np
 
 import pufferlib
 import pufferlib.emulation
 import pufferlib.environments
-import pufferlib.wrappers
 import pufferlib.postprocess
+import pufferlib.wrappers
 
 
 def env_creator(name='nmmo'):

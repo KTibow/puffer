@@ -1,16 +1,15 @@
 from pdb import set_trace as T
-import numpy as np
 
+import gym
+import numpy as np
+import pufferlib.cleanrl
+import pufferlib.vectorization
 import torch
 from torch.distributions import Categorical
 
-import gym
-
 import pufferlib
-import pufferlib.models
-import pufferlib.cleanrl
 import pufferlib.environments.classic_control
-import pufferlib.vectorization
+import pufferlib.models
 
 
 def test_cleanrl_utils():

@@ -1,16 +1,7 @@
-from pdb import set_trace as T
-
-import shimmy
-import gym
-import functools
-
-import pufferlib
-import pufferlib.emulation
-import pufferlib.environments
 # from .wrapper import RenderCharImagesWithNumpyWrapper
-
 # Copyright (c) Facebook, Inc. and its affiliates.
 import enum
+import functools
 import logging
 import os
 import random
@@ -19,11 +10,17 @@ import tempfile
 import time
 import warnings
 import weakref
+from pdb import set_trace as T
 
+import gym
 import gymnasium as gym
 import numpy as np
-
+import shimmy
 from nle import nethack
+
+import pufferlib
+import pufferlib.emulation
+import pufferlib.environments
 
 logger = logging.getLogger(__name__)
 

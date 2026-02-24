@@ -4,8 +4,9 @@ Ultra-minimal PyTorch policy for Tribal Village - optimized for maximum SPS.
 
 import torch
 import torch.nn as nn
-import pufferlib.pytorch
+
 import pufferlib.models
+import pufferlib.pytorch
 
 
 class Policy(nn.Module):

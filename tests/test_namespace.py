@@ -1,4 +1,4 @@
-from pufferlib import namespace, dataclass
+from pufferlib import dataclass, namespace
 
 
 def test_namespace_as_function():

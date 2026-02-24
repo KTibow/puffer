@@ -1,8 +1,8 @@
-from pdb import set_trace as T
-import numpy as np
 import functools
+from pdb import set_trace as T
 
 import gymnasium as gym
+import numpy as np
 
 import pufferlib
 import pufferlib.emulation
@@ -115,7 +115,7 @@ class RaylibClient(gym.Wrapper):
 
         height *= upscale
         width *= upscale
-        from raylib import rl, colors
+        from raylib import colors, rl
 
         rl.InitWindow(width, height, 'Atari'.encode())
         rl.SetTargetFPS(60 // frameskip)

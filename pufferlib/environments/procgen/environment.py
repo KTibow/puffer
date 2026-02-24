@@ -1,18 +1,17 @@
+import functools
 from pdb import set_trace as T
-import numpy as np
 
 import gym
 import gymnasium
+import numpy as np
 import shimmy
-import functools
+from stable_baselines3.common.atari_wrappers import (
+    MaxAndSkipEnv,
+)
 
 import pufferlib
 import pufferlib.emulation
 import pufferlib.environments
-
-from stable_baselines3.common.atari_wrappers import (
-    MaxAndSkipEnv,
-)
 
 
 def env_creator(name='bigfish'):

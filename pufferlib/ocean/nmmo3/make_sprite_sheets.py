@@ -16,15 +16,15 @@ can be purchased from ManaSeed on itch.io
 21.10a - Forester Pointed Hat & Tunic 2.2 (optional, combat animations)
 """
 
-from itertools import product
-from PIL import Image
-import pyray as ray
-import numpy as np
+import os
 import random
 import sys
-import os
-import cv2
+from itertools import product
 
+import cv2
+import numpy as np
+import pyray as ray
+from PIL import Image
 
 SHEET_SIZE = 2048
 N_GENERATE = 10

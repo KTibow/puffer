@@ -1,12 +1,11 @@
 import functools
-import numpy as np
 from collections import defaultdict
 
-import mani_skill.envs
-from mani_skill.vector.wrappers.gymnasium import ManiSkillVectorEnv
-
 import gymnasium as gym
+import mani_skill.envs
+import numpy as np
 import torch
+from mani_skill.vector.wrappers.gymnasium import ManiSkillVectorEnv
 
 import pufferlib
 

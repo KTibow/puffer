@@ -1,9 +1,9 @@
 import functools
+
 import numpy as np
+from nof1.simulation.env import TradingEnvironment
 
 import pufferlib
-
-from nof1.simulation.env import TradingEnvironment
 
 
 def env_creator(name='metta'):
@@ -18,8 +18,8 @@ def make(
     seed=1,
 ):
     """Crafter creation function"""
-    from nof1.utils.config_manager import ConfigManager
     from nof1.data_ingestion.historical_data_reader import HistoricalDataReader
+    from nof1.utils.config_manager import ConfigManager
 
     config_manager = ConfigManager(config_path)
     config = config_manager.config

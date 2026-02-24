@@ -6,11 +6,9 @@ import torch.nn.functional as F
 
 import pufferlib.models
 import pufferlib.pytorch
-from pufferlib.pytorch import layer_init
-
-from pufferlib.models import LSTMWrapper as Recurrent
 from pufferlib.models import Default as Policy
-
+from pufferlib.models import LSTMWrapper as Recurrent
+from pufferlib.pytorch import layer_init
 
 """
 class Recurrent(pufferlib.models.LSTMWrapper):

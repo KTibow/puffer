@@ -1,15 +1,15 @@
 # TODO: Check actions passed to envs are right shape? On first call at least
 
+import time
 from pdb import set_trace as T
 
+import gymnasium
 import numpy as np
-import time
 import psutil
 
-from pufferlib.emulation import GymnasiumPufferEnv, PettingZooPufferEnv
-from pufferlib import PufferEnv, set_buffers
 import pufferlib.spaces
-import gymnasium
+from pufferlib import PufferEnv, set_buffers
+from pufferlib.emulation import GymnasiumPufferEnv, PettingZooPufferEnv
 
 RESET = 0
 STEP = 1

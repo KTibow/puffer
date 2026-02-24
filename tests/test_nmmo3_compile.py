@@ -1,7 +1,8 @@
-from pdb import set_trace as T
 import time
-import torch
+from pdb import set_trace as T
+
 import numpy as np
+import torch
 
 
 @torch.compile(fullgraph=True, mode='reduce-overhead')

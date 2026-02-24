@@ -1,5 +1,6 @@
 import gymnasium
 import numpy as np
+
 import pufferlib
 from pufferlib.ocean.tetris import binding
 

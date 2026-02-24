@@ -5,11 +5,12 @@ Inspired from https://gist.github.com/Yttrmin/18ecc3d2d68b407b4be1
 & https://www.youtube.com/watch?v=PSQt5KGv7Vk
 """
 
-import numpy as np
 import gymnasium
+import numpy as np
 
 import pufferlib
 from pufferlib.ocean.pong import binding
+
 # import binding
 
 

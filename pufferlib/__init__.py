@@ -31,5 +31,5 @@ sys.stderr.close()
 sys.stdout = original_stdout
 sys.stderr = original_stderr
 
-from pufferlib.pufferlib import *
 from pufferlib import environments
+from pufferlib.pufferlib import *

@@ -1,11 +1,9 @@
-from pdb import set_trace as T
-
 import argparse
 import importlib
 import time
+from pdb import set_trace as T
 
 import cv2
-
 
 # Tested human: classic_control, atari, minigrid
 # Tested rbg_array: atari, pokemon_red, crafter

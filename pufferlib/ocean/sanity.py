@@ -1,8 +1,9 @@
-import gymnasium
-import pettingzoo
-import numpy as np
 import random
 import time
+
+import gymnasium
+import numpy as np
+import pettingzoo
 
 
 class Bandit(gymnasium.Env):

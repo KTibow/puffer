@@ -3,8 +3,8 @@
 import gymnasium
 import numpy as np
 
-from pufferlib.ocean.slimevolley import binding
 import pufferlib
+from pufferlib.ocean.slimevolley import binding
 
 
 class SlimeVolley(pufferlib.PufferEnv):

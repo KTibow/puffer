@@ -1,5 +1,6 @@
-import numpy as np
 import timeit
+
+import numpy as np
 
 # Time np.zeros(2, 5) for 100000 iterations
 time_zeros = timeit.timeit(

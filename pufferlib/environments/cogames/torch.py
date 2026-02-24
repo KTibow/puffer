@@ -1,6 +1,7 @@
 """Torch policies for CoGames environments."""
 
 import torch
+
 import pufferlib.models
 import pufferlib.pytorch
 

@@ -1,7 +1,7 @@
-import numpy as np
 import os
 
 import gymnasium
+import numpy as np
 
 import pufferlib
 from pufferlib.ocean.grid import binding

@@ -1,5 +1,6 @@
-import gymnasium
 import functools
+
+import gymnasium
 
 import pufferlib
 import pufferlib.emulation

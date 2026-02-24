@@ -1,12 +1,11 @@
-from pdb import set_trace as T
-import numpy as np
 import time
+from pdb import set_trace as T
 
 import gymnasium
+import numpy as np
+from pufferlib.vectorization import Multiprocessing, Ray, Serial
 
 import pufferlib
-from pufferlib.vectorization import Serial, Multiprocessing, Ray
-
 
 # This is about 1 second on a good CPU core. It is quite difficult to
 # find good sources of a 1 second delay without using a timer that can swap
@@ -163,8 +162,8 @@ def plot_performance_tests():
     inner_inner_data = list(inner_data.items())[0][1]
     n_backends, backends = len(inner_inner_data), list(inner_inner_data.keys())
 
-    from matplotlib import pyplot as plt
     import matplotlib.colors as mcolors
+    from matplotlib import pyplot as plt
 
     # Create figure and axes
     fig, ax = plt.subplots(figsize=(15, 5))  # Adjust size as needed
@@ -188,10 +187,10 @@ def plot_performance_tests():
     grayscale_colors = np.linspace(0.4, 1, n_cores)
     hue_colors = 255 * plt.cm.hsv(np.linspace(0, 0.6, n_backends))[:, :3]
 
-    import plotly.graph_objects as go
     import dash
     import dash_core_components as dcc
     import dash_html_components as html
+    import plotly.graph_objects as go
 
     # Plotting the bars
     pos = 0

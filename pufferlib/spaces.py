@@ -1,6 +1,6 @@
-import numpy as np
 import gym
 import gymnasium
+import numpy as np
 
 Box = (gym.spaces.Box, gymnasium.spaces.Box)
 Dict = (gym.spaces.Dict, gymnasium.spaces.Dict)

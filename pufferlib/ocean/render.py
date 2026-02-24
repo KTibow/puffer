@@ -1,9 +1,9 @@
-import numpy as np
 import os
 
-from cffi import FFI
-from raylib import rl, colors
+import numpy as np
 import pyray
+from cffi import FFI
+from raylib import colors, rl
 
 PUFF_BACKGROUND = [6, 24, 24, 255]
 PUFF_TEXT = [0, 187, 187, 255]

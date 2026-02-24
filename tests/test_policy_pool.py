@@ -1,9 +1,8 @@
 import unittest
 
 import numpy as np
-import torch
-
 import pufferlib.policy_pool as pp
+import torch
 
 NUM_AGENTS = 4
 NUM_ENVS = 2

@@ -1,16 +1,15 @@
+import warnings
 from pdb import set_trace as T
-
-import numpy as np
-
-import pufferlib
-import pufferlib.emulation
-import pufferlib.utils
-import pufferlib.vector
-from pufferlib.environments import test
 
 # Deprecation warnings from gymnasium
 import gymnasium
-import warnings
+import numpy as np
+import pufferlib.utils
+
+import pufferlib
+import pufferlib.emulation
+import pufferlib.vector
+from pufferlib.environments import test
 
 warnings.filterwarnings('ignore')
 

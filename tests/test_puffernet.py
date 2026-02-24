@@ -1,8 +1,6 @@
-import torch
 import numpy as np
-
-
 import pyximport
+import torch
 
 pyximport.install(
     setup_args={
@@ -325,8 +323,8 @@ def test_nmmo3(batch_size=1, input_size=512, hidden_size=512):
     input_torch = torch.arange(11 * 15 * 10 + 47 + 10) % 4
     input_torch = input_torch.view(1, -1)
 
-    from pufferlib.ocean.torch import NMMO3, NMMO3LSTM
     from pufferlib.ocean import env_creator
+    from pufferlib.ocean.torch import NMMO3, NMMO3LSTM
 
     env = env_creator('puffer_nmmo3')()
     model = NMMO3(env, hidden_size=hidden_size)

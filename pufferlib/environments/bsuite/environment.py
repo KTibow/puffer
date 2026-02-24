@@ -1,12 +1,12 @@
-from pdb import set_trace as T
-import gym
 import functools
+from pdb import set_trace as T
+
+import bsuite
+import gym
+from bsuite.utils import gym_wrapper
 
 import pufferlib.emulation
 import pufferlib.wrappers
-
-import bsuite
-from bsuite.utils import gym_wrapper
 
 
 def env_creator(name='bandit/0'):

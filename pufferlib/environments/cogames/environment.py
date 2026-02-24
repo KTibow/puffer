@@ -1,6 +1,7 @@
 """CoGames wrapper for PufferLib."""
 
 import functools
+
 from cogames.cli.mission import get_mission
 from mettagrid import PufferMettaGridEnv
 from mettagrid.envs.stats_tracker import StatsTracker

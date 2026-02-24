@@ -1,7 +1,6 @@
 from pdb import set_trace as T
 
 import gymnasium
-
 from links_awaken import LinksAwakenV1 as env_creator
 
 import pufferlib.emulation

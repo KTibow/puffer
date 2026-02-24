@@ -1,11 +1,12 @@
-from pdb import set_trace as T
-import numpy as np
 import functools
+from pdb import set_trace as T
+
+import numpy as np
 
 import pufferlib
-from pufferlib import namespace
 import pufferlib.emulation
 import pufferlib.environments
+from pufferlib import namespace
 
 
 def env_creator(name='connect_four'):

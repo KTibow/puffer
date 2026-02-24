@@ -1,5 +1,6 @@
-import numpy as np
 import gymnasium
+import numpy as np
+
 import pufferlib
 from pufferlib.ocean.cartpole import binding
 

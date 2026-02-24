@@ -1,8 +1,9 @@
-from pdb import set_trace as T
-import numpy as np
 import time
+from pdb import set_trace as T
 
+import numpy as np
 from pufferlib.vectorization import Multiprocessing
+
 from pufferlib.environments import pokemon_red
 
 

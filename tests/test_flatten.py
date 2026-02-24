@@ -1,7 +1,7 @@
-import pufferlib.extensions as c
-from pufferlib.emulation import flatten_structure
 import timeit
 
+import pufferlib.extensions as c
+from pufferlib.emulation import flatten_structure
 
 samples = [
     [1, {'foo': (1, 2, 3)}],

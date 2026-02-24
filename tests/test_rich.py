@@ -1,15 +1,15 @@
-import psutil
-import GPUtil
-import time
 import sys
+import time
 
+import GPUtil
+import psutil
 import rich
 from rich.console import Console
 from rich.layout import Layout
 from rich.live import Live
-from rich.table import Table
 from rich.panel import Panel
-from rich.progress import Progress, BarColumn, TextColumn, MofNCompleteColumn
+from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn
+from rich.table import Table
 
 # import pufferlib
 

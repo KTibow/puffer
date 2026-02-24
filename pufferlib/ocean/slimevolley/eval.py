@@ -1,10 +1,10 @@
 import gymnasium
 import numpy as np
-
-from pufferlib.ocean.slimevolley import binding
-import pufferlib
-from pufferlib.ocean.torch import Policy
 import torch
+
+import pufferlib
+from pufferlib.ocean.slimevolley import binding
+from pufferlib.ocean.torch import Policy
 
 
 class SlimeVolley(pufferlib.PufferEnv):

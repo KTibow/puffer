@@ -1,8 +1,8 @@
+import functools
 from pdb import set_trace as T
 
 import gym
 import shimmy
-import functools
 
 import pufferlib
 import pufferlib.emulation

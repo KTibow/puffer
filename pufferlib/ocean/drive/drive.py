@@ -1,9 +1,11 @@
-import numpy as np
-import gymnasium
 import json
-import struct
 import os
 import random
+import struct
+
+import gymnasium
+import numpy as np
+
 import pufferlib
 from pufferlib.ocean.drive import binding
 

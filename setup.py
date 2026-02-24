@@ -2,24 +2,24 @@
 #    DEBUG=1 python setup.py build_ext --inplace --force
 #    CUDA_VISIBLE_DEVICES=None LD_PRELOAD=$(gcc -print-file-name=libasan.so) python3.12 -m pufferlib.clean_pufferl eval --train.device cpu
 
-from setuptools import find_packages, find_namespace_packages, setup, Extension
-import numpy
-import os
 import glob
-import urllib.request
-import zipfile
-import tarfile
+import os
 import platform
 import shutil
+import tarfile
+import urllib.request
+import zipfile
 
+import numpy
+from setuptools import Extension, find_namespace_packages, find_packages, setup
 from setuptools.command.build_ext import build_ext
 from torch.utils import cpp_extension
 from torch.utils.cpp_extension import (
-    CppExtension,
-    CUDAExtension,
-    BuildExtension,
     CUDA_HOME,
     ROCM_HOME,
+    BuildExtension,
+    CppExtension,
+    CUDAExtension,
 )
 
 # build cuda extension if torch can find CUDA or HIP/ROCM in the system

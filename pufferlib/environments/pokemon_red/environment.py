@@ -1,8 +1,7 @@
+import functools
 from pdb import set_trace as T
 
 import gymnasium
-import functools
-
 from pokegym import Environment
 
 import pufferlib.emulation

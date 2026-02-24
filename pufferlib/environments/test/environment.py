@@ -1,19 +1,17 @@
-from pdb import set_trace as T
-import numpy as np
-
-import time
 import hashlib
+import time
+from pdb import set_trace as T
 
 import gym
 import gymnasium
-from gymnasium.spaces import Box, Discrete, Dict, Tuple
-from pufferlib import spaces
+import numpy as np
+from gymnasium.spaces import Box, Dict, Discrete, Tuple
 from pettingzoo.utils.env import ParallelEnv
 
 import pufferlib
 import pufferlib.emulation
 import pufferlib.utils
-
+from pufferlib import spaces
 
 HIGH = 100
 LOW = 0

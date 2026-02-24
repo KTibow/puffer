@@ -1,14 +1,14 @@
-from pdb import set_trace as T
-import numpy as np
 import functools
+from pdb import set_trace as T
 
 import gymnasium as gym
+import numpy as np
 
 import pufferlib
 import pufferlib.emulation
 import pufferlib.environments
-import pufferlib.utils
 import pufferlib.postprocess
+import pufferlib.utils
 
 
 def env_creator(name='doom'):

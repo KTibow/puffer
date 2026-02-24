@@ -1,15 +1,14 @@
 import os
 import sys
 import warnings
-
-from contextlib import redirect_stdout, redirect_stderr, contextmanager
-from types import SimpleNamespace
 from collections.abc import Mapping
-from io import StringIO
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from functools import wraps
+from io import StringIO
+from types import SimpleNamespace
 
-import numpy as np
 import gymnasium
+import numpy as np
 
 import pufferlib.spaces
 

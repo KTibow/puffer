@@ -1,9 +1,9 @@
-from pdb import set_trace as T
-import numpy as np
 import os
+from pdb import set_trace as T
 
-import pettingzoo
 import gymnasium
+import numpy as np
+import pettingzoo
 
 import pufferlib
 from pufferlib.ocean.moba import binding

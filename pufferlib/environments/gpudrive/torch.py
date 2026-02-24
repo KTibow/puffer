@@ -1,10 +1,10 @@
-from torch import nn
+from functools import partial
+
 import torch
 import torch.nn.functional as F
+from torch import nn
 
-from functools import partial
 import pufferlib.models
-
 from pufferlib.models import Default as Policy
 
 Recurrent = pufferlib.models.LSTMWrapper

@@ -1,4 +1,5 @@
 import functools
+
 import numpy as np
 
 import pufferlib
@@ -82,7 +83,7 @@ train_levels = [
 
 
 def env_creator(name='kinetix'):
-    from kinetix.environment.env import ObservationType, ActionType
+    from kinetix.environment.env import ActionType, ObservationType
 
     _, obs, act = name.split('-')
     if obs == 'symbolic':
@@ -107,17 +108,16 @@ def make(name, *args, **kwargs):
 class KinetixPufferEnv(pufferlib.environment.PufferEnv):
     def __init__(self, observation_type, action_type, num_envs=1, buf=None):
 
-        from kinetix.environment.env import (
-            make_kinetix_env,
-            ObservationType,
-            ActionType,
-        )
-        from kinetix.environment.env_state import EnvParams, StaticEnvParams
-        from kinetix.environment.ued.ued_state import UEDParams
-        from kinetix.environment.ued.ued import make_reset_fn_list_of_levels
-
         import jax
         from gymnax.environments.spaces import gymnax_space_to_gym_space
+        from kinetix.environment.env import (
+            ActionType,
+            ObservationType,
+            make_kinetix_env,
+        )
+        from kinetix.environment.env_state import EnvParams, StaticEnvParams
+        from kinetix.environment.ued.ued import make_reset_fn_list_of_levels
+        from kinetix.environment.ued.ued_state import UEDParams
 
         self.observation_type = observation_type
         self.action_type = action_type

@@ -1,7 +1,7 @@
 """High-perf many-agent snake. Inspired by snake env from https://github.com/dnbt777"""
 
-import numpy as np
 import gymnasium
+import numpy as np
 
 import pufferlib
 from pufferlib import APIUsageError
