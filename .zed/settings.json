@@ -1,0 +1,6 @@
+{
+    "tab_size": 4,
+    "terminal": {
+        "detect_venv": "off",
+    },
+}

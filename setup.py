@@ -6,6 +6,7 @@ import glob
 import os
 import platform
 import shutil
+import ssl
 import tarfile
 import urllib.request
 import zipfile
@@ -22,6 +23,8 @@ from torch.utils.cpp_extension import (
     CUDAExtension,
 )
 
+ssl._create_default_https_context = ssl._create_unverified_context
+
 # build cuda extension if torch can find CUDA or HIP/ROCM in the system
 # may require `uv pip install --no-build-isolation` or `python setup.py build_ext --inplace`
 BUID_CUDA_EXT = bool(CUDA_HOME or ROCM_HOME)
@@ -31,11 +34,24 @@ DEBUG = os.getenv('DEBUG', '0') == '1'
 NO_OCEAN = os.getenv('NO_OCEAN', '0') == '1'
 NO_TRAIN = os.getenv('NO_TRAIN', '0') == '1'
 
+# Machine setup
+SYSTEM = platform.system()
+MACHINE = platform.machine().lower()
+IS_ARM = MACHINE in ['arm64', 'aarch64']
+
 # Build raylib for your platform
 RAYLIB_URL = 'https://github.com/raysan5/raylib/releases/download/5.5/'
-RAYLIB_NAME = (
-    'raylib-5.5_macos' if platform.system() == 'Darwin' else 'raylib-5.5_linux_amd64'
-)
+if SYSTEM == 'Linux':
+    RAYLIB_NAME = 'raylib-6.0_linux_arm64' if IS_ARM else 'raylib-5.5_linux_amd64'
+    RAYLIB_EXT = '.tar.gz'
+elif SYSTEM == 'Darwin':
+    RAYLIB_NAME = 'raylib-5.5_macos'
+    RAYLIB_EXT = '.tar.gz'
+elif SYSTEM == 'Windows':
+    RAYLIB_NAME = 'raylib-5.5_win64_msvc16'
+    RAYLIB_EXT = '.zip'
+else:
+    raise ValueError(f'Unsupported system: {SYSTEM}')
 RLIGHTS_URL = 'https://raw.githubusercontent.com/raysan5/raylib/refs/heads/master/examples/shaders/rlights.h'
 
 
@@ -56,12 +72,17 @@ def download_raylib(platform, ext):
 
 if not NO_OCEAN:
     download_raylib('raylib-5.5_webassembly', '.zip')
-    download_raylib(RAYLIB_NAME, '.tar.gz')
+    download_raylib(RAYLIB_NAME, RAYLIB_EXT)
 
-BOX2D_URL = 'https://github.com/capnspacehook/box2d/releases/latest/download/'
-BOX2D_NAME = (
-    'box2d-macos-arm64' if platform.system() == 'Darwin' else 'box2d-linux-amd64'
-)
+BOX2D_URL = 'https://github.com/KTibow/box2d/releases/latest/download/'
+if SYSTEM == 'Linux':
+    BOX2D_NAME = 'box2d-linux-arm64' if IS_ARM else 'box2d-linux-amd64'
+elif SYSTEM == 'Darwin':
+    BOX2D_NAME = 'box2d-macos-arm64'
+elif SYSTEM == 'Windows':
+    BOX2D_NAME = 'box2d-windows-arm64' if IS_ARM else 'box2d-windows-amd64'
+else:
+    raise ValueError(f'Unsupported system: {SYSTEM}')
 
 
 def download_box2d(platform):
@@ -125,8 +146,8 @@ else:
         '-O3',
     ]
 
-system = platform.system()
-if system == 'Linux':
+SYSTEM = platform.system()
+if SYSTEM == 'Linux':
     extra_compile_args += [
         '-Wno-alloc-size-larger-than',
         '-Wno-implicit-function-declaration',
@@ -135,7 +156,7 @@ if system == 'Linux':
     extra_link_args += [
         '-Bsymbolic-functions',
     ]
-elif system == 'Darwin':
+elif SYSTEM == 'Darwin':
     extra_compile_args += [
         '-Wno-error=int-conversion',
         '-Wno-error=incompatible-function-pointer-types',
@@ -149,8 +170,10 @@ elif system == 'Darwin':
         '-framework',
         'IOKit',
     ]
+elif SYSTEM == 'Windows':
+    pass
 else:
-    raise ValueError(f'Unsupported system: {system}')
+    raise ValueError(f'Unsupported system: {SYSTEM}')
 
 # Default Gym/Gymnasium/PettingZoo versions
 # Gym:
@@ -191,7 +214,11 @@ class TorchBuildExt(cpp_extension.BuildExtension):
 
 
 INCLUDE = [f'{BOX2D_NAME}/include', f'{BOX2D_NAME}/src']
-RAYLIB_A = f'{RAYLIB_NAME}/lib/libraylib.a'
+RAYLIB_A = (
+    f'{RAYLIB_NAME}/lib/raylibdll.lib'
+    if SYSTEM == 'Windows'
+    else f'{RAYLIB_NAME}/lib/libraylib.a'
+)
 extension_kwargs = dict(
     include_dirs=INCLUDE,
     extra_compile_args=extra_compile_args,
@@ -202,7 +229,8 @@ extension_kwargs = dict(
 # Find C extensions
 c_extensions = []
 if not NO_OCEAN:
-    c_extension_paths = glob.glob('pufferlib/ocean/**/binding.c', recursive=True)
+    # c_extension_paths = glob.glob('pufferlib/ocean/**/binding.c', recursive=True)
+    c_extension_paths = glob.glob('pufferlib/ocean/pong/binding.c', recursive=True)
     c_extensions = [
         Extension(
             path.rstrip('.c').replace('/', '.'),
@@ -275,19 +303,22 @@ if not NO_TRAIN:
         ),
     ]
 
-# Prevent Conda from injecting garbage compile flags
-from distutils.sysconfig import get_config_vars
+if SYSTEM != 'Windows':
+    # Prevent Conda from injecting garbage compile flags
+    from distutils.sysconfig import get_config_vars
 
-cfg_vars = get_config_vars()
-for key in ('CC', 'CXX', 'LDSHARED'):
-    if cfg_vars[key]:
-        cfg_vars[key] = cfg_vars[key].replace('-B /root/anaconda3/compiler_compat', '')
-        cfg_vars[key] = cfg_vars[key].replace('-pthread', '')
-        cfg_vars[key] = cfg_vars[key].replace('-fno-strict-overflow', '')
+    cfg_vars = get_config_vars()
+    for key in ('CC', 'CXX', 'LDSHARED'):
+        if cfg_vars[key]:
+            cfg_vars[key] = cfg_vars[key].replace(
+                '-B /root/anaconda3/compiler_compat', ''
+            )
+            cfg_vars[key] = cfg_vars[key].replace('-pthread', '')
+            cfg_vars[key] = cfg_vars[key].replace('-fno-strict-overflow', '')
 
-for key, value in cfg_vars.items():
-    if value and '-fno-strict-overflow' in str(value):
-        cfg_vars[key] = value.replace('-fno-strict-overflow', '')
+    for key, value in cfg_vars.items():
+        if value and '-fno-strict-overflow' in str(value):
+            cfg_vars[key] = value.replace('-fno-strict-overflow', '')
 
 install_requires = [
     'setuptools',

@@ -7,6 +7,10 @@ import warnings
 
 warnings.filterwarnings('error', category=RuntimeWarning)
 
+import platform
+
+is_windows = platform.system() == 'Windows'
+
 import argparse
 import ast
 import configparser
@@ -902,7 +906,10 @@ class Utilization(Thread):
         while not self.stopped:
             self.cpu_util.append(100 * psutil.cpu_percent() / psutil.cpu_count())
             mem = psutil.virtual_memory()
-            self.cpu_mem.append(100 * mem.active / mem.total)
+            if is_windows:
+                self.cpu_mem.append(100 * mem.used / mem.total)
+            else:
+                self.cpu_mem.append(100 * mem.active / mem.total)
             if torch.cuda.is_available():
                 # Monitoring in distributed crashes nvml
                 if torch.distributed.is_initialized():

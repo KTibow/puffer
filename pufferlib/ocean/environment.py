@@ -1,6 +1,13 @@
 import importlib
+import os
+import platform
 
 import pufferlib.emulation
+
+is_windows = platform.system() == 'Windows'
+if is_windows:
+    raylib_dll_path = os.path.abspath(r'raylib-5.5_win64_msvc16\lib')
+    os.add_dll_directory(raylib_dll_path)
 
 
 def lazy_import(module_path, attr):
