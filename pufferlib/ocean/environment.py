@@ -281,6 +281,7 @@ MAKE_FUNCTIONS = {
     'spaces': make_spaces,
     'multiagent': make_multiagent,
     'slimevolley': 'SlimeVolley',
+    'roomba': 'Roomba',
 }
 
 

@@ -2,10 +2,10 @@
 #include <string.h>
 #include "raylib.h"
 
-const Color PUFF_RED = (Color){187, 0, 0, 255};
-const Color PUFF_CYAN = (Color){0, 187, 187, 255};
-const Color PUFF_WHITE = (Color){241, 241, 241, 241};
-const Color PUFF_BACKGROUND = (Color){6, 24, 24, 255};
+#define PUFF_RED (Color){187, 0, 0, 255}
+#define PUFF_CYAN (Color){0, 187, 187, 255}
+#define PUFF_WHITE (Color){241, 241, 241, 241}
+#define PUFF_BACKGROUND (Color){6, 24, 24, 255}
 
 // Only use floats!
 typedef struct {
