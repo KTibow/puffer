@@ -22,14 +22,14 @@ typedef struct {
     int size;
     int x;
     int goal;
-} Roomba;
+} Template;
 
-void c_reset(Roomba* env) {
+void c_reset(Template* env) {
     env->x = 0;
     env->goal = (rand()%2 == 0) ? env->size : -env->size;
 }
 
-void c_step(Roomba* env) {
+void c_step(Template* env) {
     env->rewards[0] = 0;
     env->terminals[0] = 0;
     if (env->actions[0] == 0) {
@@ -53,7 +53,7 @@ void c_step(Roomba* env) {
     env->observations[0] = (env->goal > 0) ? 1 : -1;
 }
 
-void c_render(Roomba* env) {
+void c_render(Template* env) {
     if (!IsWindowReady()) {
         InitWindow(1080, 720, "PufferLib Template");
         SetTargetFPS(5);
@@ -72,7 +72,7 @@ void c_render(Roomba* env) {
     EndDrawing();
 }
 
-void c_close(Roomba* env) {
+void c_close(Template* env) {
     if (IsWindowReady()) {
         CloseWindow();
     }
