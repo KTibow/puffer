@@ -59,7 +59,7 @@ void c_render(Roomba* env) {
         SetTargetFPS(5);
     }
 
-    if (IsKeyDown(KEY_ESCAPE)) {
+    if (WindowShouldClose()) {
         exit(0);
     }
 
