@@ -6,6 +6,7 @@
 #define PUFF_CYAN (Color){0, 187, 187, 255}
 #define PUFF_WHITE (Color){241, 241, 241, 241}
 #define PUFF_BACKGROUND (Color){6, 24, 24, 255}
+#define DT 0.1f
 
 // Only use floats!
 typedef struct {
@@ -56,7 +57,7 @@ void c_step(Roomba* env) {
 void c_render(Roomba* env) {
     if (!IsWindowReady()) {
         InitWindow(1080, 720, "PufferLib Template");
-        SetTargetFPS(5);
+        SetTargetFPS(1 / DT);
     }
 
     if (WindowShouldClose()) {
