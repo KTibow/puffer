@@ -4,7 +4,11 @@ import numpy as np
 import pufferlib
 from pufferlib.ocean.roomba import binding
 
-SIZE = 100
+WIDTH = 500  # mm
+HEIGHT = 500  # mm
+SPEED = 100  # mm/s
+DT = 0.1  # s
+TICK_LIMIT = 20 // DT  # s
 
 
 class Roomba(pufferlib.PufferEnv):
@@ -12,9 +16,11 @@ class Roomba(pufferlib.PufferEnv):
         self, num_envs=1, render_mode=None, log_interval=128, buf=None, seed=0
     ):
         self.single_observation_space = gymnasium.spaces.Box(
-            low=0, high=1, shape=(1,), dtype=np.uint8
+            low=0, high=1, shape=(4,), dtype=np.float32
         )
-        self.single_action_space = gymnasium.spaces.Discrete(2)
+        self.single_action_space = gymnasium.spaces.Box(
+            low=-1, high=1, shape=(2,), dtype=np.float32
+        )
         self.render_mode = render_mode
         self.num_agents = num_envs
 
@@ -27,7 +33,11 @@ class Roomba(pufferlib.PufferEnv):
             self.truncations,
             num_envs,
             seed,
-            size=SIZE,
+            width=WIDTH,
+            height=HEIGHT,
+            speed=SPEED,
+            dt=DT,
+            tick_limit=TICK_LIMIT,
         )
 
     def reset(self, seed=0):
