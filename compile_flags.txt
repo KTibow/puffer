@@ -1,0 +1,17 @@
+-I./raylib-6.0_linux_arm64/include
+-I./box2d-linux-arm64/include
+-I./raylib-5.5_win64_msvc16/include
+-I./box2d-windows-amd64/include
+-I./pufferlib/ocean
+-I./pufferlib/extensions
+-I./.venv/Lib/site-packages/numpy/core/include
+-IC:/Users/2000628/Documents/PufferLib/raylib-5.5_win64_msvc16/include
+-IC:/Users/2000628/Documents/PufferLib/box2d-windows-amd64/include
+-IC:/Users/2000628/Documents/PufferLib/.venv/Lib/site-packages/numpy/core/include
+-IC:/Users/2000628/Documents/PufferLib/pufferlib/ocean
+-IC:/Users/2000628/Documents/PufferLib/pufferlib/extensions
+-IC:/Users/2000628/Documents/portable-msvc/msvc/VC/Tools/MSVC/14.50.35717/include
+-IC:/Users/2000628/Documents/portable-msvc/msvc/Windows Kits/10/Include/10.0.26100.0/ucrt
+-IC:/Users/2000628/Documents/portable-msvc/msvc/Windows Kits/10/Include/10.0.26100.0/shared
+-IC:/Users/2000628/Documents/portable-msvc/msvc/Windows Kits/10/Include/10.0.26100.0/um
+-IC:/Users/2000628/AppData/Roaming/uv/python/cpython-3.14.2-windows-x86_64-none/Include
