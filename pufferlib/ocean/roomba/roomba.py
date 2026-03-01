@@ -4,10 +4,12 @@ import numpy as np
 import pufferlib
 from pufferlib.ocean.roomba import binding
 
+SIZE = 100
+
 
 class Roomba(pufferlib.PufferEnv):
     def __init__(
-        self, num_envs=1, render_mode=None, log_interval=128, size=5, buf=None, seed=0
+        self, num_envs=1, render_mode=None, log_interval=128, buf=None, seed=0
     ):
         self.single_observation_space = gymnasium.spaces.Box(
             low=0, high=1, shape=(1,), dtype=np.uint8
@@ -25,9 +27,8 @@ class Roomba(pufferlib.PufferEnv):
             self.truncations,
             num_envs,
             seed,
-            size=size,
+            size=SIZE,
         )
-        self.size = size
 
     def reset(self, seed=0):
         binding.vec_reset(self.c_envs, seed)
