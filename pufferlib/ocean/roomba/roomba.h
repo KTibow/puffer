@@ -9,6 +9,7 @@
 #define PUFF_WHITE (Color){241, 241, 241, 241}
 #define PUFF_BACKGROUND (Color){6, 24, 24, 255}
 #define PIXELS_PER_MM 1
+#define ROBOT_RADIUS (20 * PIXELS_PER_MM)
 
 // Only use floats!
 typedef struct {
@@ -29,50 +30,88 @@ typedef struct {
     int speed;
     float dt;
     int tick_limit;
+    int wheel_base;
 
     // state
     float x;
     float y;
+    float bearing;
     float goalX;
     float goalY;
     float tick;
     float progress_prev;
 } Roomba;
 
-void updateObs(Roomba* env) {
+void update_obs(Roomba* env) {
     env->observations[0] = env->x / env->width;
     env->observations[1] = env->y / env->height;
-    env->observations[2] = env->goalX / env->width;
-    env->observations[3] = env->goalY / env->height;
+    env->observations[2] = cosf(env->bearing) * 0.5f + 0.5f;
+    env->observations[3] = sinf(env->bearing) * 0.5f + 0.5f;
+    env->observations[4] = env->goalX / env->width;
+    env->observations[5] = env->goalY / env->height;
 }
-float getProgress(Roomba* env) {
+float get_progress(Roomba* env) {
     float dx = env->x - env->goalX;
     float dy = env->y - env->goalY;
     return -sqrtf(dx*dx + dy*dy);
+}
+float get_max_progress(Roomba* env) {
+    return env->speed * env->dt;
+}
+
+// Credit: Gemini 3 Flash
+void update_pose(float *x, float *y, float *bearing,
+                 float v_l, float v_r,
+                 float wheel_base)
+{
+    // 1. Calculate linear and angular velocity
+    float v = (v_r + v_l) / 2.0f;
+    float w = (v_r - v_l) / wheel_base;
+
+    // 2. Update position
+    if (fabsf(w) < 1e-6f) {
+        // Straight line (prevents division by zero)
+        *x += v * cosf(*bearing);
+        *y += v * sinf(*bearing);
+    } else {
+        // Precise Arc (The "Nuance" math)
+        float theta_new = *bearing + (w);
+        *x += (v / w) * (sinf(theta_new) - sinf(*bearing));
+        *y -= (v / w) * (cosf(theta_new) - cosf(*bearing));
+        *bearing = theta_new;
+    }
+
+    // 3. Keep angle between -PI and PI
+    if (*bearing >  PI) *bearing -= 2.0f * PI;
+    if (*bearing < -PI) *bearing += 2.0f * PI;
 }
 
 void c_reset(Roomba* env) {
     env->x = env->width / 2;
     env->y = env->height / 2;
+    env->bearing = 0;
     env->goalX = GetRandomValue(0, env->width);
     env->goalY = GetRandomValue(0, env->height);
     env->tick = 0;
-    env->progress_prev = getProgress(env);
-    updateObs(env);
+    env->progress_prev = get_progress(env);
+    update_obs(env);
 }
 
 void c_step(Roomba* env) {
-    updateObs(env);
+    update_obs(env);
 
-    env->x += env->actions[0] * env->speed * env->dt;
-    env->y += env->actions[1] * env->speed * env->dt;
-    float progress = getProgress(env);
+    float left_wheel = env->actions[0] * env->speed * env->dt;
+    float right_wheel = env->actions[1] * env->speed * env->dt;
+    update_pose(&env->x, &env->y, &env->bearing, left_wheel, right_wheel, env->wheel_base);
+
+    float progress = get_progress(env);
     bool success = progress > -5.0f;
     bool death = env->x < 0 || env->x > env->width ||
         env->y < 0 || env-> y > env->height ||
         env->tick == env->tick_limit;
 
-    float reward = (progress - env->progress_prev) / env->dt * 0.05f;
+    float max_progress = get_max_progress(env);
+    float reward = (progress - env->progress_prev) / max_progress * 0.5f;
     if (success) {
         reward += 1.0f;
         env->log.perf += 1;
@@ -90,7 +129,7 @@ void c_step(Roomba* env) {
         return;
     }
 
-    updateObs(env);
+    update_obs(env);
     env->terminals[0] = 0;
     env->progress_prev = progress;
     env->tick++;
@@ -107,8 +146,9 @@ void c_render(Roomba* env) {
         exit(0);
     }
 
-    DrawCircleLines(env->goalX, env->goalY, 20 * PIXELS_PER_MM, PUFF_CYAN);
-    DrawCircle(env->x, env->y, 20 * PIXELS_PER_MM, PUFF_CYAN);
+    DrawCircleLines(env->goalX, env->goalY, ROBOT_RADIUS, PUFF_CYAN);
+    DrawCircle(env->x, env->y, ROBOT_RADIUS, PUFF_CYAN);
+    DrawLine(env->x, env->y, env->x + ROBOT_RADIUS * cosf(env->bearing), env->y + ROBOT_RADIUS * sinf(env->bearing), PUFF_WHITE);
 
     BeginDrawing();
     ClearBackground(PUFF_BACKGROUND);
