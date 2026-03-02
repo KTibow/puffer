@@ -164,4 +164,4 @@ pufferlib/ocean/impulse_wars/release-*/
 pufferlib/ocean/impulse_wars/benchmark/
 
 # "Directory junction" to pufferlib/resources/
-resources
+/resources

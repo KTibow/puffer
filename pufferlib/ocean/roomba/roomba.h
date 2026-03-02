@@ -11,6 +11,8 @@
 #define PIXELS_PER_MM 1
 #define ROBOT_RADIUS (20 * PIXELS_PER_MM)
 
+Font monaspace;
+
 // Only use floats!
 typedef struct {
     float perf;
@@ -140,6 +142,7 @@ void c_render(Roomba* env) {
         SetConfigFlags(FLAG_WINDOW_HIGHDPI);
         InitWindow(env->width * PIXELS_PER_MM, env->height * PIXELS_PER_MM, "3omba");
         SetTargetFPS(1 / env->dt);
+        monaspace = LoadFont("resources/roomba/MonaspaceNeon-Regular.otf");
     }
 
     if (WindowShouldClose()) {
@@ -149,6 +152,7 @@ void c_render(Roomba* env) {
     DrawCircleLines(env->goalX, env->goalY, ROBOT_RADIUS, PUFF_CYAN);
     DrawCircle(env->x, env->y, ROBOT_RADIUS, PUFF_CYAN);
     DrawLine(env->x, env->y, env->x + ROBOT_RADIUS * cosf(env->bearing), env->y + ROBOT_RADIUS * sinf(env->bearing), PUFF_WHITE);
+    DrawTextEx(monaspace, "hi", (Vector2){0,0}, 20, 0, PUFF_CYAN);
 
     BeginDrawing();
     ClearBackground(PUFF_BACKGROUND);
