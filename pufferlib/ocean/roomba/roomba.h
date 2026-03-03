@@ -9,7 +9,8 @@
 #define PUFF_WHITE (Color){241, 241, 241, 241}
 #define PUFF_BACKGROUND (Color){6, 24, 24, 255}
 #define PIXELS_PER_MM 1
-#define ROBOT_RADIUS (20 * PIXELS_PER_MM)
+#define ROBOT_DIAMETER (329.9f * PIXELS_PER_MM)
+#define ROBOT_RADIUS (ROBOT_DIAMETER / 2)
 
 Font monaspace;
 
@@ -112,7 +113,7 @@ void c_step(Roomba* env) {
     update_pose(&env->x, &env->y, &env->bearing, left_wheel, right_wheel, env->wheel_base);
 
     float progress = get_progress(env);
-    bool success = progress > -5.0f;
+    bool success = progress > -50.0f;
     bool death = env->x < 0 || env->x > env->width ||
         env->y < 0 || env-> y > env->height ||
         env->tick == env->tick_limit;

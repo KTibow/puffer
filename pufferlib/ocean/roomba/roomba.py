@@ -4,12 +4,12 @@ import numpy as np
 import pufferlib
 from pufferlib.ocean.roomba import binding
 
-WIDTH = 500  # mm
-HEIGHT = 500  # mm
-SPEED = 100  # mm/s
+WIDTH = 1000  # mm
+HEIGHT = 1000  # mm
+SPEED = 250  # mm/s
 DT = 0.1  # s
 TICK_LIMIT = 20 // DT  # s
-WHEEL_BASE = 40  # mm
+WHEEL_BASE = 235  # mm
 
 
 class Roomba(pufferlib.PufferEnv):
