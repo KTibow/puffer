@@ -23,7 +23,7 @@ typedef struct {
 typedef struct {
     Log log;                     // Required field
     float* observations;         // Required field. Ensure type matches in .py and .c
-    float* actions;                // Required field. Ensure type matches in .py and .c
+    float* actions;              // Required field. Ensure type matches in .py and .c
     float* rewards;              // Required field
     unsigned char* terminals;    // Required field
 
