@@ -8,7 +8,10 @@
 #define PUFF_CYAN (Color){0, 187, 187, 255}
 #define PUFF_WHITE (Color){241, 241, 241, 241}
 #define PUFF_BACKGROUND (Color){6, 24, 24, 255}
+
 #define PIXELS_PER_MM 1
+#define COVERAGE_DOTS_SIZE 50
+
 #define ROBOT_DIAMETER (329.9f * PIXELS_PER_MM)
 #define ROBOT_RADIUS (ROBOT_DIAMETER / 2)
 
@@ -36,6 +39,7 @@ typedef struct {
     int wheel_base;
 
     // state
+    bool coverage_dots[COVERAGE_DOTS_SIZE][COVERAGE_DOTS_SIZE];
     float x;
     float y;
     float bearing;
@@ -54,12 +58,18 @@ void update_obs(Roomba* env) {
     env->observations[5] = env->goalY / env->height;
 }
 float get_progress(Roomba* env) {
-    float dx = env->x - env->goalX;
-    float dy = env->y - env->goalY;
-    return -sqrtf(dx*dx + dy*dy);
+    int progress = 0;
+    for (size_t y = 0; y < COVERAGE_DOTS_SIZE; y++) {
+        for (size_t x = 0; x < COVERAGE_DOTS_SIZE; x++) {
+            if (env->coverage_dots[y][x]) {
+                progress++;
+            }
+        }
+    }
+    return progress;
 }
 float get_max_progress(Roomba* env) {
-    return env->speed * env->dt;
+    return 2;
 }
 
 // Credit: Gemini 3 Flash
@@ -102,6 +112,7 @@ void c_reset(Roomba* env) {
     env->goalY = GetRandomValue(0, env->height);
     env->tick = 0;
     env->progress_prev = get_progress(env);
+    memset(env->coverage_dots, 0, sizeof env->coverage_dots);
     update_obs(env);
 }
 
@@ -113,7 +124,7 @@ void c_step(Roomba* env) {
     update_pose(&env->x, &env->y, &env->bearing, left_wheel, right_wheel, env->wheel_base);
 
     float progress = get_progress(env);
-    bool success = progress > -50.0f;
+    bool success = progress > (COVERAGE_DOTS_SIZE * COVERAGE_DOTS_SIZE * 0.9f);
     bool death = env->x < 0 || env->x > env->width ||
         env->y < 0 || env-> y > env->height ||
         env->tick == env->tick_limit;
