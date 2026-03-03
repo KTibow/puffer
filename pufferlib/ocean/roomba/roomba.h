@@ -63,12 +63,13 @@ float get_max_progress(Roomba* env) {
 
 // Credit: Gemini 3 Flash
 void update_pose(float *x, float *y, float *bearing,
-                 float v_l, float v_r,
+                 float d_l, float d_r,
                  float wheel_base)
 {
-    // 1. Calculate linear and angular velocity
-    float v = (v_r + v_l) / 2.0f;
-    float w = (v_r - v_l) / wheel_base;
+    // 1. Calculate linear displacement and angular displacement
+    float v = (d_r + d_l) / 2.0f;
+    // (d_l - d_r) makes faster left wheel = positive change in bearing = Clockwise turn
+    float w = (d_l - d_r) / wheel_base;
 
     // 2. Update position
     if (fabsf(w) < 1e-6f) {
@@ -76,10 +77,14 @@ void update_pose(float *x, float *y, float *bearing,
         *x += v * cosf(*bearing);
         *y += v * sinf(*bearing);
     } else {
-        // Precise Arc (The "Nuance" math)
-        float theta_new = *bearing + (w);
+        // Precise arc
+        float theta_new = *bearing + w;
+
+        // In Y-down, x = ∫ v cos(θ) dt  and y = ∫ v sin(θ) dt
+        // Integrating these gives:
         *x += (v / w) * (sinf(theta_new) - sinf(*bearing));
-        *y -= (v / w) * (cosf(theta_new) - cosf(*bearing));
+        *y -= (v / w) * (cosf(theta_new) - cosf(*bearing)); // Note the minus sign
+
         *bearing = theta_new;
     }
 
@@ -149,13 +154,14 @@ void c_render(Roomba* env) {
         exit(0);
     }
 
+    BeginDrawing();
+    ClearBackground(PUFF_BACKGROUND);
+
     DrawCircleLines(env->goalX, env->goalY, ROBOT_RADIUS, PUFF_CYAN);
     DrawCircle(env->x, env->y, ROBOT_RADIUS, PUFF_CYAN);
     DrawLine(env->x, env->y, env->x + ROBOT_RADIUS * cosf(env->bearing), env->y + ROBOT_RADIUS * sinf(env->bearing), PUFF_WHITE);
-    DrawTextEx(monaspace, "hi", (Vector2){0,0}, 20, 0, PUFF_CYAN);
+    DrawTextEx(monaspace, TextFormat("L%+.2f R%+.2f", env->actions[0], env->actions[1]), (Vector2){0,0}, 20, 0, PUFF_CYAN);
 
-    BeginDrawing();
-    ClearBackground(PUFF_BACKGROUND);
     EndDrawing();
 }
 
