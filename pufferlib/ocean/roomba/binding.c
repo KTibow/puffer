@@ -10,10 +10,13 @@ static int my_init(Env *env, PyObject *args, PyObject *kwargs) {
   env->dt = unpack(kwargs, "dt");
   env->tick_limit = unpack(kwargs, "tick_limit");
   env->wheel_base = unpack(kwargs, "wheel_base");
+  env->brush_length = unpack(kwargs, "brush_length");
   return 0;
 }
 
 static int my_log(PyObject *dict, Log *log) {
   assign_to_dict(dict, "perf", log->perf);
+  assign_to_dict(dict, "suicide", log->suicide);
+  assign_to_dict(dict, "coverage", log->coverage);
   return 0;
 }

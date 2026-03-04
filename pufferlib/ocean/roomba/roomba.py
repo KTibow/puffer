@@ -8,8 +8,9 @@ WIDTH = 1000  # mm
 HEIGHT = 1000  # mm
 SPEED = 250  # mm/s
 DT = 0.1  # s
-TICK_LIMIT = 20 // DT  # s
+TICK_LIMIT = 60 // DT  # s
 WHEEL_BASE = 235  # mm
+BRUSH_LENGTH = 204  # mm
 
 
 class Roomba(pufferlib.PufferEnv):
@@ -17,7 +18,7 @@ class Roomba(pufferlib.PufferEnv):
         self, num_envs=1, render_mode=None, log_interval=128, buf=None, seed=0
     ):
         self.single_observation_space = gymnasium.spaces.Box(
-            low=0, high=1, shape=(6,), dtype=np.float32
+            low=0, high=1, shape=((4 + 20 * 20),), dtype=np.float32
         )
         self.single_action_space = gymnasium.spaces.Box(
             low=-1, high=1, shape=(2,), dtype=np.float32
@@ -40,6 +41,7 @@ class Roomba(pufferlib.PufferEnv):
             dt=DT,
             tick_limit=TICK_LIMIT,
             wheel_base=WHEEL_BASE,
+            brush_length=BRUSH_LENGTH,
         )
 
     def reset(self, seed=0):
