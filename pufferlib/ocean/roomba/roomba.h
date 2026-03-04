@@ -43,11 +43,11 @@ typedef struct {
     int brush_length;
 
     // state
-    bool coverage_dots[COVERAGE_DOTS_SIZE][COVERAGE_DOTS_SIZE];
     float x;
     float y;
     float bearing;
     int tick;
+    bool coverage_dots[COVERAGE_DOTS_SIZE][COVERAGE_DOTS_SIZE];
     float progress_prev;
 } Roomba;
 
@@ -183,8 +183,8 @@ void c_reset(Roomba* env) {
     env->y = GetRandomValue(0, env->height);
     env->bearing = ((float)GetRandomValue(0, 1000) / 1000.0f) * 2.0f * PI;
     env->tick = 0;
-    env->progress_prev = get_progress(env);
     memset(env->coverage_dots, 0, sizeof env->coverage_dots);
+    env->progress_prev = get_progress(env);
     update_obs(env);
 }
 
