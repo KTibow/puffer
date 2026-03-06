@@ -9,12 +9,12 @@ from pufferlib.ocean.boustrophedon import binding
 
 class Boustrophedon(pufferlib.PufferEnv):
     def __init__(
-        self, num_envs=1, render_mode=None, log_interval=128, size=5, buf=None, seed=0
+        self, num_envs=1, render_mode=None, log_interval=128, buf=None, seed=0
     ):
         self.single_observation_space = gymnasium.spaces.Box(
-            low=0, high=1, shape=(1,), dtype=np.uint8
+            low=-1, high=1, shape=(4,), dtype=np.int8
         )
-        self.single_action_space = gymnasium.spaces.Discrete(2)
+        self.single_action_space = gymnasium.spaces.Discrete(3)
         self.render_mode = render_mode
         self.num_agents = num_envs
 
@@ -27,9 +27,7 @@ class Boustrophedon(pufferlib.PufferEnv):
             self.truncations,
             num_envs,
             seed,
-            size=size,
         )
-        self.size = size
 
     def reset(self, seed=0):
         binding.vec_reset(self.c_envs, seed)
