@@ -282,6 +282,7 @@ MAKE_FUNCTIONS = {
     'multiagent': make_multiagent,
     'slimevolley': 'SlimeVolley',
     'roomba': 'Roomba',
+    'boustrophedon': 'Boustrophedon',
 }
 
 

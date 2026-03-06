@@ -230,7 +230,10 @@ extension_kwargs = dict(
 c_extensions = []
 if not NO_OCEAN:
     # c_extension_paths = glob.glob('pufferlib/ocean/**/binding.c', recursive=True)
-    c_extension_paths = glob.glob('pufferlib/ocean/roomba/binding.c', recursive=True)
+    # c_extension_paths = glob.glob('pufferlib/ocean/roomba/binding.c', recursive=True)
+    c_extension_paths = glob.glob(
+        'pufferlib/ocean/boustrophedon/binding.c', recursive=True
+    )
     c_extensions = [
         Extension(
             path.rstrip('.c').replace('/', '.'),
