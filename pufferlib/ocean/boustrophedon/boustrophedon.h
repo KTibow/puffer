@@ -16,7 +16,7 @@ typedef struct {
 
 typedef struct {
     Log log;                     // Required field
-    unsigned char* observations; // Required field. Ensure type matches in .py and .c
+    float* observations;         // Required field. Ensure type matches in .py and .c
     int* actions;                // Required field. Ensure type matches in .py and .c
     float* rewards;              // Required field
     unsigned char* terminals;    // Required field
@@ -30,8 +30,8 @@ typedef struct {
 } Boustrophedon;
 
 void update_obs(Boustrophedon* env) {
-    env->observations[0] = env->y == 0;
-    env->observations[1] = env->y == SIZE - 1;
+    env->observations[0] = env->y == 0 ? 1 : 0;
+    env->observations[1] = env->y == SIZE - 1 ? 1 : 0;
     env->observations[2] = env->dx;
     env->observations[3] = env->dy;
 }
