@@ -21,6 +21,7 @@ typedef struct {
     float* rewards;              // Required field
     unsigned char* terminals;    // Required field
 
+    int tick;
     int x;
     int y;
     int dx;
@@ -36,6 +37,7 @@ void update_obs(Boustrophedon* env) {
 }
 
 void c_reset(Boustrophedon* env) {
+    env->tick = 0;
     env->x = 0;
     env->y = 0;
     env->dx = 1;
@@ -83,7 +85,7 @@ void c_step(Boustrophedon* env) {
     bool success = true;
     float reward = 0;
 
-    if (env->x < 0 || env->x >= SIZE || env->y < 0 || env->y >= SIZE) {
+    if (env->x < 0 || env->x >= SIZE || env->y < 0 || env->y >= SIZE || env->tick >= SIZE * SIZE * 2) {
         failure = true;
         success = false;
     } else {
@@ -113,6 +115,7 @@ void c_step(Boustrophedon* env) {
     } else {
         env->terminals[0] = 0;
         update_obs(env);
+        env->tick++;
     }
     env->rewards[0] = reward;
 }
