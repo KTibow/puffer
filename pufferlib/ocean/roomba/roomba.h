@@ -20,7 +20,6 @@ Font monaspace;
 
 // Only use floats!
 typedef struct {
-    float perf; // % wins
     float suicide; // % runs into wall
     float coverage;
     float n; // Required as the last field
@@ -38,7 +37,6 @@ typedef struct {
     float height;
     int speed;
     float dt;
-    int tick_limit;
     int wheel_base;
     int brush_length;
 
@@ -47,6 +45,7 @@ typedef struct {
     float y;
     float bearing;
     int tick;
+    int last_coverage_tick;
     bool coverage_dots[COVERAGE_DOTS_SIZE][COVERAGE_DOTS_SIZE];
     float progress_prev;
 } Roomba;
@@ -56,11 +55,6 @@ void update_obs(Roomba* env) {
     env->observations[1] = env->y / env->height;
     env->observations[2] = cosf(env->bearing) * 0.5f + 0.5f;
     env->observations[3] = sinf(env->bearing) * 0.5f + 0.5f;
-    for (size_t r = 0; r < COVERAGE_DOTS_SIZE; r++) {
-        for (size_t c = 0; c < COVERAGE_DOTS_SIZE; c++) {
-            env->observations[4 + r * COVERAGE_DOTS_SIZE + c] = env->coverage_dots[r][c];
-        }
-    }
 }
 
 // Credit: Gemini 3 Flash
@@ -155,6 +149,7 @@ void update_progress(float old_x, float old_y, float old_bearing, Roomba* env) {
             // 5. If the cell center is within the brush radius, it's covered!
             if (dist_sq <= radius_sq) {
                 env->coverage_dots[r][c] = true;
+                env->last_coverage_tick = env->tick;
             }
         }
     }
@@ -174,14 +169,18 @@ int get_progress(Roomba* env) {
 int get_max_progress() {
     return 5;
 }
-int get_total_progress() {
+int get_max_coverage() {
     return COVERAGE_DOTS_SIZE * COVERAGE_DOTS_SIZE;
 }
 
 void c_reset(Roomba* env) {
-    env->x = GetRandomValue(0, env->width);
-    env->y = GetRandomValue(0, env->height);
-    env->bearing = ((float)GetRandomValue(0, 1000) / 1000.0f) * 2.0f * PI;
+    env->x = 20;
+    env->y = 20;
+    env->bearing = PI/2;
+    // env->x = GetRandomValue(0, env->width);
+    // env->y = GetRandomValue(0, env->height);
+    // env->bearing = ((float)GetRandomValue(0, 1000) / 1000.0f) * 2.0f * PI;
+    env->last_coverage_tick = 0;
     env->tick = 0;
     memset(env->coverage_dots, 0, sizeof env->coverage_dots);
     env->progress_prev = get_progress(env);
@@ -202,28 +201,30 @@ void c_step(Roomba* env) {
 
     update_progress(old_x, old_y, old_bearing, env);
     float progress = get_progress(env);
-    bool success = progress > (COVERAGE_DOTS_SIZE * COVERAGE_DOTS_SIZE * 0.9f);
+    bool end = env->tick - env->last_coverage_tick > 30;
     bool suicide = env->x < 0 || env->x > env->width ||
         env->y < 0 || env-> y > env->height;
-    bool death = suicide || env->tick == env->tick_limit;
 
     float max_progress = get_max_progress();
+    float max_coverage = get_max_coverage();
     float reward = (progress - env->progress_prev) / max_progress * 0.5f;
-    if (success) {
-        reward += 1.0f;
-        env->log.perf += 1;
+    if (end) {
+        float term = progress / max_coverage - 0.9f;
+        term *= 10.0f;
+        if (term < -1.0f) {
+            term = -1.0f;
+        }
+        reward += term;
     }
     if (suicide) {
+        reward -= 1.0f;
         env->log.suicide += 1;
     }
-    if (death) {
-        reward -= 1.0f;
-    }
-    // reward -= 0.01f; // slightly incentivize speed
+    reward -= 0.01f; // slightly incentivize speed
     env->rewards[0] = reward;
 
-    if (success || death) {
-        env->log.coverage = (float) progress / get_total_progress();
+    if (end || suicide) {
+        env->log.coverage = progress / max_coverage;
         env->log.n += 1;
         env->terminals[0] = 1;
         c_reset(env);
