@@ -45,13 +45,23 @@ typedef struct {
     float progress_prev;
 } Roomba;
 
+void wrap_around_angle(float *angle) {
+    if (*angle < -PI) *angle += 2.0f * PI;
+    if (*angle >  PI) *angle -= 2.0f * PI;
+}
+
 void update_obs(Roomba* env) {
     env->observations[0] = env->x / env->width;
     env->observations[1] = env->y / env->height;
     env->observations[2] = cosf(env->bearing) * 0.5f + 0.5f;
     env->observations[3] = sinf(env->bearing) * 0.5f + 0.5f;
-    env->observations[4] = env->goalX / env->width;
-    env->observations[5] = env->goalY / env->height;
+    float goalDX = env->goalX - env->x;
+    float goalDY = env->goalY - env->y;
+    env->observations[4] = sqrtf(goalDX * goalDX + goalDY * goalDY) / sqrtf(env->width * env->width + env->height * env->height);
+    float angle = atan2f(goalDX, goalDY) - env->bearing;
+    wrap_around_angle(&angle);
+    env->observations[5] = cosf(angle) * 0.5f + 0.5f;
+    env->observations[6] = sinf(angle) * 0.5f + 0.5f;
 }
 float get_progress(Roomba* env) {
     float dx = env->x - env->goalX;
@@ -90,13 +100,12 @@ void update_pose(float *x, float *y, float *bearing,
     }
 
     // 3. Keep angle between -PI and PI
-    if (*bearing >  PI) *bearing -= 2.0f * PI;
-    if (*bearing < -PI) *bearing += 2.0f * PI;
+    wrap_around_angle(bearing);
 }
 
 void c_reset(Roomba* env) {
-    env->x = env->width / 2;
-    env->y = env->height / 2;
+    env->x = GetRandomValue(0, env->width);
+    env->y = GetRandomValue(0, env->height);
     env->bearing = 0;
     env->goalX = GetRandomValue(0, env->width);
     env->goalY = GetRandomValue(0, env->height);
