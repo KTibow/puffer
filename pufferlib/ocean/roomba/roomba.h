@@ -4,10 +4,11 @@
 #include <string.h>
 #include "raylib.h"
 
-#define PUFF_RED (Color){187, 0, 0, 255}
-#define PUFF_CYAN (Color){0, 187, 187, 255}
-#define PUFF_WHITE (Color){241, 241, 241, 241}
-#define PUFF_BACKGROUND (Color){6, 24, 24, 255}
+#define PUFF_RED (Color){250, 116, 111, 255}
+#define PUFF_CYAN (Color){155, 208, 207, 255}
+#define PUFF_ON_CYAN (Color){12, 72, 72, 255}
+#define PUFF_WHITE (Color){220, 232, 232, 241}
+#define PUFF_BACKGROUND (Color){10, 15, 15, 255}
 #define PIXELS_PER_MM 1
 #define ROBOT_DIAMETER (329.9f * PIXELS_PER_MM)
 #define ROBOT_RADIUS (ROBOT_DIAMETER / 2)
@@ -167,9 +168,9 @@ void c_render(Roomba* env) {
     BeginDrawing();
     ClearBackground(PUFF_BACKGROUND);
 
-    DrawCircleLines(env->goalX, env->goalY, ROBOT_RADIUS, PUFF_CYAN);
+    DrawCircle(env->goalX, env->goalY, 5 * PIXELS_PER_MM, PUFF_RED);
     DrawCircle(env->x, env->y, ROBOT_RADIUS, PUFF_CYAN);
-    DrawLine(env->x, env->y, env->x + ROBOT_RADIUS * cosf(env->bearing), env->y + ROBOT_RADIUS * sinf(env->bearing), PUFF_WHITE);
+    DrawLine(env->x, env->y, env->x + ROBOT_RADIUS * cosf(env->bearing), env->y + ROBOT_RADIUS * sinf(env->bearing), PUFF_ON_CYAN);
     DrawTextEx(monaspace, TextFormat("L%+.2f R%+.2f", env->actions[0], env->actions[1]), (Vector2){0,0}, 20, 0, PUFF_CYAN);
 
     EndDrawing();
