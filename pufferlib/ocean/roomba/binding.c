@@ -15,5 +15,6 @@ static int my_init(Env *env, PyObject *args, PyObject *kwargs) {
 
 static int my_log(PyObject *dict, Log *log) {
   assign_to_dict(dict, "perf", log->perf);
+  assign_to_dict(dict, "coverage", log->coverage);
   return 0;
 }
