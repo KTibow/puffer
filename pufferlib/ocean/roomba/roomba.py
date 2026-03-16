@@ -8,7 +8,9 @@ WIDTH = 1000  # mm
 HEIGHT = 1000  # mm
 SPEED = 250  # mm/s
 DT = 0.1  # s
-TICK_LIMIT = 20 // DT  # s
+N_GOALS = 4  # Keep in sync with roomba.h
+BASE_EPISODE_SECONDS = 20
+TICK_LIMIT = int(BASE_EPISODE_SECONDS * N_GOALS / DT)
 WHEEL_BASE = 235  # mm
 
 
@@ -17,7 +19,7 @@ class Roomba(pufferlib.PufferEnv):
         self, num_envs=1, render_mode=None, log_interval=128, buf=None, seed=0
     ):
         self.single_observation_space = gymnasium.spaces.Box(
-            low=0, high=1, shape=(7,), dtype=np.float32
+            low=0, high=1, shape=((4 + 4 * N_GOALS),), dtype=np.float32
         )
         self.single_action_space = gymnasium.spaces.Box(
             low=-1, high=1, shape=(2,), dtype=np.float32
