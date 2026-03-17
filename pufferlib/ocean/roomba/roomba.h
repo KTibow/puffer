@@ -10,6 +10,7 @@
 #define PUFF_WHITE (Color){220, 232, 232, 241}
 #define PUFF_BACKGROUND (Color){10, 15, 15, 255}
 #define PIXELS_PER_MM 1
+#define EPSILON_SECONDS 0.01f
 #define ROBOT_DIAMETER (329.9f * PIXELS_PER_MM)
 #define ROBOT_RADIUS (ROBOT_DIAMETER / 2)
 
@@ -73,37 +74,6 @@ float get_max_progress(Roomba* env) {
     return env->speed * env->dt;
 }
 
-// Credit: Gemini 3 Flash
-void update_pose(float *x, float *y, float *bearing,
-                 float d_l, float d_r,
-                 float wheel_base)
-{
-    // 1. Calculate linear displacement and angular displacement
-    float v = (d_r + d_l) / 2.0f;
-    // (d_l - d_r) makes faster left wheel = positive change in bearing = Clockwise turn
-    float w = (d_l - d_r) / wheel_base;
-
-    // 2. Update position
-    if (fabsf(w) < 1e-6f) {
-        // Straight line (prevents division by zero)
-        *x += v * cosf(*bearing);
-        *y += v * sinf(*bearing);
-    } else {
-        // Precise arc
-        float theta_new = *bearing + w;
-
-        // In Y-down, x = ∫ v cos(θ) dt  and y = ∫ v sin(θ) dt
-        // Integrating these gives:
-        *x += (v / w) * (sinf(theta_new) - sinf(*bearing));
-        *y -= (v / w) * (cosf(theta_new) - cosf(*bearing)); // Note the minus sign
-
-        *bearing = theta_new;
-    }
-
-    // 3. Keep angle between -PI and PI
-    wrap_around_angle(bearing);
-}
-
 void c_reset(Roomba* env) {
     env->x = GetRandomValue(0, env->width);
     env->y = GetRandomValue(0, env->height);
@@ -118,9 +88,18 @@ void c_reset(Roomba* env) {
 void c_step(Roomba* env) {
     update_obs(env);
 
-    float left_wheel = env->actions[0] * env->speed * env->dt;
-    float right_wheel = env->actions[1] * env->speed * env->dt;
-    update_pose(&env->x, &env->y, &env->bearing, left_wheel, right_wheel, env->wheel_base);
+    for (int i = 0; i < (env->dt / EPSILON_SECONDS); i++) {
+        float left_wheel = env->actions[0] * env->speed * EPSILON_SECONDS;
+        float right_wheel = env->actions[1] * env->speed * EPSILON_SECONDS;
+
+        float linear_displacement = (left_wheel + right_wheel) / 2.0f;
+        float angular_displacement = (left_wheel - right_wheel) / env->wheel_base;
+
+        env->x += linear_displacement * cosf(env->bearing);
+        env->y += linear_displacement * sinf(env->bearing);
+        env->bearing += angular_displacement;
+        wrap_around_angle(&env->bearing);
+    }
 
     float progress = get_progress(env);
     bool success = progress > -50.0f;
