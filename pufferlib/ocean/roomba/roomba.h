@@ -9,10 +9,13 @@
 #define PUFF_ON_CYAN (Color){12, 72, 72, 255}
 #define PUFF_WHITE (Color){220, 232, 232, 241}
 #define PUFF_BACKGROUND (Color){10, 15, 15, 255}
-#define PIXELS_PER_MM 1
 #define EPSILON_SECONDS 0.01f
-#define ROBOT_DIAMETER (329.9f * PIXELS_PER_MM)
+#define ROBOT_DIAMETER 329.9f
 #define ROBOT_RADIUS (ROBOT_DIAMETER / 2)
+#define COVERAGE_RESOLUTION 20
+// todo: these are starts not centers
+#define COVERAGE_X(c) (env->width / COVERAGE_RESOLUTION * c)
+#define COVERAGE_Y(r) (env->height / COVERAGE_RESOLUTION * r)
 
 Font monaspace;
 
@@ -38,6 +41,7 @@ typedef struct {
     int wheel_base;
 
     // state
+    bool coverage[COVERAGE_RESOLUTION][COVERAGE_RESOLUTION];
     float x;
     float y;
     float bearing;
@@ -75,6 +79,11 @@ float get_max_progress(Roomba* env) {
 }
 
 void c_reset(Roomba* env) {
+    for (int r = 0; r < COVERAGE_RESOLUTION; r++) {
+        for (int c = 0; c < COVERAGE_RESOLUTION; c++) {
+            env->coverage[r][c] = false;
+        }
+    }
     env->x = GetRandomValue(0, env->width);
     env->y = GetRandomValue(0, env->height);
     env->bearing = 0;
@@ -99,6 +108,18 @@ void c_step(Roomba* env) {
         env->y += linear_displacement * sinf(env->bearing);
         env->bearing += angular_displacement;
         wrap_around_angle(&env->bearing);
+        for (int r = 0; r < COVERAGE_RESOLUTION; r++) {
+            for (int c = 0; c < COVERAGE_RESOLUTION; c++) {
+                if (env->coverage[r][c]) continue;
+                float x = COVERAGE_X(c);
+                float y = COVERAGE_Y(r);
+                float dx = env->x - x;
+                float dy = env->y - y;
+                if (sqrtf(dx * dx + dy * dy) < 10.0f) {
+                    env->coverage[r][c] = true;
+                }
+            }
+        }
     }
 
     float progress = get_progress(env);
@@ -135,7 +156,7 @@ void c_step(Roomba* env) {
 void c_render(Roomba* env) {
     if (!IsWindowReady()) {
         SetConfigFlags(FLAG_WINDOW_HIGHDPI);
-        InitWindow(env->width * PIXELS_PER_MM, env->height * PIXELS_PER_MM, "3omba");
+        InitWindow(env->width, env->height, "3omba");
         SetTargetFPS(1 / env->dt);
         monaspace = LoadFont("resources/roomba/MonaspaceNeon-Regular.otf");
     }
@@ -147,7 +168,13 @@ void c_render(Roomba* env) {
     BeginDrawing();
     ClearBackground(PUFF_BACKGROUND);
 
-    DrawCircle(env->goalX, env->goalY, 5 * PIXELS_PER_MM, PUFF_RED);
+    for (int r = 0; r < COVERAGE_RESOLUTION; r++) {
+        for (int c = 0; c < COVERAGE_RESOLUTION; c++) {
+            if (env->coverage[r][c]) continue;
+            DrawRectangle(COVERAGE_X(c), COVERAGE_Y(r), COVERAGE_X(1), COVERAGE_Y(1), PUFF_ON_CYAN);
+        }
+    }
+    DrawCircle(env->goalX, env->goalY, 5, PUFF_RED);
     DrawCircle(env->x, env->y, ROBOT_RADIUS, PUFF_CYAN);
     DrawLine(env->x, env->y, env->x + ROBOT_RADIUS * cosf(env->bearing), env->y + ROBOT_RADIUS * sinf(env->bearing), PUFF_ON_CYAN);
     DrawTextEx(monaspace, TextFormat("L%+.2f R%+.2f", env->actions[0], env->actions[1]), (Vector2){0,0}, 20, 0, PUFF_CYAN);
