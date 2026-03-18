@@ -9,13 +9,16 @@
 #define PUFF_ON_CYAN (Color){12, 72, 72, 255}
 #define PUFF_WHITE (Color){220, 232, 232, 241}
 #define PUFF_BACKGROUND (Color){10, 15, 15, 255}
-#define EPSILON_SECONDS 0.01f
+#define EPSILON_SECONDS 0.02f
 #define ROBOT_DIAMETER 329.9f
 #define ROBOT_RADIUS (ROBOT_DIAMETER / 2)
 #define COVERAGE_RESOLUTION 20
-// todo: these are starts not centers
-#define COVERAGE_X(c) (env->width / COVERAGE_RESOLUTION * c)
-#define COVERAGE_Y(r) (env->height / COVERAGE_RESOLUTION * r)
+#define X_START_COVERAGE_RECT(c) (env->width / COVERAGE_RESOLUTION * c)
+#define Y_START_COVERAGE_RECT(r) (env->height / COVERAGE_RESOLUTION * r)
+#define WIDTH_COVERAGE_RECT() (env->width / COVERAGE_RESOLUTION)
+#define HEIGHT_COVERAGE_RECT() (env->height / COVERAGE_RESOLUTION)
+#define X_COVERAGE_DOT(c) (env->width / COVERAGE_RESOLUTION * (c + 0.5f))
+#define Y_COVERAGE_DOT(r) (env->height / COVERAGE_RESOLUTION * (r + 0.5f))
 
 Font monaspace;
 
@@ -45,37 +48,54 @@ typedef struct {
     float x;
     float y;
     float bearing;
-    float goalX;
-    float goalY;
-    float tick;
-    float progress_prev;
+    int tick;
+    int progress_prev;
 } Roomba;
 
 void wrap_around_angle(float *angle) {
     if (*angle < -PI) *angle += 2.0f * PI;
     if (*angle >  PI) *angle -= 2.0f * PI;
 }
+bool is_coverage_position_in_bounds(int position) {
+    return position >= 0 && position < COVERAGE_RESOLUTION;
+}
+void conditionally_cover(Roomba* env, int r, int c) {
+    if (!is_coverage_position_in_bounds(r)) return;
+    if (!is_coverage_position_in_bounds(c)) return;
+    env->coverage[r][c] = true;
+}
 
-void update_obs(Roomba* env) {
-    env->observations[0] = env->x / env->width;
-    env->observations[1] = env->y / env->height;
-    env->observations[2] = cosf(env->bearing) * 0.5f + 0.5f;
-    env->observations[3] = sinf(env->bearing) * 0.5f + 0.5f;
-    float goalDX = env->goalX - env->x;
-    float goalDY = env->goalY - env->y;
-    env->observations[4] = sqrtf(goalDX * goalDX + goalDY * goalDY) / sqrtf(env->width * env->width + env->height * env->height);
-    float angle = atan2f(goalDX, goalDY) - env->bearing;
-    wrap_around_angle(&angle);
-    env->observations[5] = cosf(angle) * 0.5f + 0.5f;
-    env->observations[6] = sinf(angle) * 0.5f + 0.5f;
+int calculate_bumper_distance(Roomba* env, float relative_angle) {
+    int distance = 0;
+    while (distance < 50) {
+        float x = env->x + cosf(env->bearing + relative_angle) * (distance + ROBOT_RADIUS);
+        float y = env->y + sinf(env->bearing + relative_angle) * (distance + ROBOT_RADIUS);
+        if (x < 0) break;
+        if (y < 0) break;
+        if (x >= env->width) break;
+        if (y >= env->height) break;
+        distance++;
+    }
+    return distance;
 }
-float get_progress(Roomba* env) {
-    float dx = env->x - env->goalX;
-    float dy = env->y - env->goalY;
-    return -sqrtf(dx*dx + dy*dy);
+
+void update_obs(Roomba* env, int progress) {
+    env->observations[0] = (float)calculate_bumper_distance(env, -0.22f*PI) / 50; // left bumper
+    env->observations[1] = (float)calculate_bumper_distance(env, 0) / 50;
+    env->observations[2] = (float)calculate_bumper_distance(env, 0.35f*PI) / 50; // right bumper
+    env->observations[3] = (float)progress / (COVERAGE_RESOLUTION*COVERAGE_RESOLUTION);
 }
-float get_max_progress(Roomba* env) {
-    return env->speed * env->dt;
+int get_progress(Roomba* env) {
+    int progress = 0;
+    for (int r = 0; r < COVERAGE_RESOLUTION; r++) {
+        for (int c = 0; c < COVERAGE_RESOLUTION; c++) {
+            if (env->coverage[r][c]) progress++;
+        }
+    }
+    return progress;
+}
+int get_max_progress(Roomba* env) {
+    return 5;
 }
 
 void c_reset(Roomba* env) {
@@ -84,19 +104,16 @@ void c_reset(Roomba* env) {
             env->coverage[r][c] = false;
         }
     }
-    env->x = GetRandomValue(0, env->width);
-    env->y = GetRandomValue(0, env->height);
+    env->x = GetRandomValue(ROBOT_RADIUS, env->width - ROBOT_RADIUS);
+    env->y = GetRandomValue(ROBOT_RADIUS, env->height - ROBOT_RADIUS);
     env->bearing = 0;
-    env->goalX = GetRandomValue(0, env->width);
-    env->goalY = GetRandomValue(0, env->height);
     env->tick = 0;
-    env->progress_prev = get_progress(env);
-    update_obs(env);
+    int progress = get_progress(env);
+    env->progress_prev = progress;
+    update_obs(env, progress);
 }
 
 void c_step(Roomba* env) {
-    update_obs(env);
-
     for (int i = 0; i < (env->dt / EPSILON_SECONDS); i++) {
         float left_wheel = env->actions[0] * env->speed * EPSILON_SECONDS;
         float right_wheel = env->actions[1] * env->speed * EPSILON_SECONDS;
@@ -108,28 +125,36 @@ void c_step(Roomba* env) {
         env->y += linear_displacement * sinf(env->bearing);
         env->bearing += angular_displacement;
         wrap_around_angle(&env->bearing);
-        for (int r = 0; r < COVERAGE_RESOLUTION; r++) {
-            for (int c = 0; c < COVERAGE_RESOLUTION; c++) {
-                if (env->coverage[r][c]) continue;
-                float x = COVERAGE_X(c);
-                float y = COVERAGE_Y(r);
-                float dx = env->x - x;
-                float dy = env->y - y;
-                if (sqrtf(dx * dx + dy * dy) < 10.0f) {
-                    env->coverage[r][c] = true;
-                }
-            }
-        }
+
+        int center_r = roundf(COVERAGE_RESOLUTION * (env->y/env->height));
+        int center_c = roundf(COVERAGE_RESOLUTION * (env->x/env->width));
+        conditionally_cover(env, center_r, center_c);
+        conditionally_cover(env, center_r - 3, center_c);
+        conditionally_cover(env, center_r - 2, center_c);
+        conditionally_cover(env, center_r - 1, center_c);
+        conditionally_cover(env, center_r + 1, center_c);
+        conditionally_cover(env, center_r + 2, center_c);
+        conditionally_cover(env, center_r + 3, center_c);
+        conditionally_cover(env, center_r, center_c - 3);
+        conditionally_cover(env, center_r, center_c - 2);
+        conditionally_cover(env, center_r, center_c - 1);
+        conditionally_cover(env, center_r, center_c + 1);
+        conditionally_cover(env, center_r, center_c + 2);
+        conditionally_cover(env, center_r, center_c + 3);
+        conditionally_cover(env, center_r - 1, center_c - 1);
+        conditionally_cover(env, center_r - 1, center_c + 1);
+        conditionally_cover(env, center_r + 1, center_c - 1);
+        conditionally_cover(env, center_r + 1, center_c + 1);
     }
 
-    float progress = get_progress(env);
-    bool success = progress > -50.0f;
-    bool death = env->x < 0 || env->x > env->width ||
-        env->y < 0 || env-> y > env->height ||
+    int progress = get_progress(env);
+    bool success = progress > COVERAGE_RESOLUTION*COVERAGE_RESOLUTION*0.9f;
+    bool death = env->x < ROBOT_RADIUS || env->x > (env->width - ROBOT_RADIUS) ||
+        env->y < ROBOT_RADIUS || env->y > (env->height - ROBOT_RADIUS) ||
         env->tick == env->tick_limit;
 
-    float max_progress = get_max_progress(env);
-    float reward = (progress - env->progress_prev) / max_progress * 0.5f;
+    int max_progress = get_max_progress(env);
+    float reward = (float)(progress - env->progress_prev) / max_progress * 0.5f;
     if (success) {
         reward += 1.0f;
         env->log.perf += 1;
@@ -137,7 +162,7 @@ void c_step(Roomba* env) {
     if (death) {
         reward -= 1.0f;
     }
-    reward -= 0.1f; // incentivize speed
+    reward -= 0.01f; // incentivize speed
     env->rewards[0] = reward;
 
     if (success || death) {
@@ -147,7 +172,7 @@ void c_step(Roomba* env) {
         return;
     }
 
-    update_obs(env);
+    update_obs(env, progress);
     env->terminals[0] = 0;
     env->progress_prev = progress;
     env->tick++;
@@ -168,13 +193,15 @@ void c_render(Roomba* env) {
     BeginDrawing();
     ClearBackground(PUFF_BACKGROUND);
 
+    float width = WIDTH_COVERAGE_RECT();
+    float height = HEIGHT_COVERAGE_RECT();
     for (int r = 0; r < COVERAGE_RESOLUTION; r++) {
+        float y_start = Y_START_COVERAGE_RECT(r);
         for (int c = 0; c < COVERAGE_RESOLUTION; c++) {
             if (env->coverage[r][c]) continue;
-            DrawRectangle(COVERAGE_X(c), COVERAGE_Y(r), COVERAGE_X(1), COVERAGE_Y(1), PUFF_ON_CYAN);
+            DrawRectangle(X_START_COVERAGE_RECT(c), y_start, width, height, PUFF_ON_CYAN);
         }
     }
-    DrawCircle(env->goalX, env->goalY, 5, PUFF_RED);
     DrawCircle(env->x, env->y, ROBOT_RADIUS, PUFF_CYAN);
     DrawLine(env->x, env->y, env->x + ROBOT_RADIUS * cosf(env->bearing), env->y + ROBOT_RADIUS * sinf(env->bearing), PUFF_ON_CYAN);
     DrawTextEx(monaspace, TextFormat("L%+.2f R%+.2f", env->actions[0], env->actions[1]), (Vector2){0,0}, 20, 0, PUFF_CYAN);
