@@ -25,6 +25,7 @@ Font monaspace;
 // Only use floats!
 typedef struct {
     float perf;
+    float coverage;
     float n; // Required as the last field
 } Log;
 
@@ -181,6 +182,7 @@ void c_step(Roomba* env) {
     if (success || death) {
         c_reset(env);
         env->terminals[0] = 1;
+        env->log.coverage = (float)progress / (COVERAGE_RESOLUTION * COVERAGE_RESOLUTION);
         env->log.n += 1;
         return;
     }
