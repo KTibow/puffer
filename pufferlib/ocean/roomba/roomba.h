@@ -94,9 +94,6 @@ int get_progress(Roomba* env) {
     }
     return progress;
 }
-int get_max_progress(Roomba* env) {
-    return 5;
-}
 
 void c_reset(Roomba* env) {
     for (int r = 0; r < COVERAGE_RESOLUTION; r++) {
@@ -114,6 +111,8 @@ void c_reset(Roomba* env) {
 }
 
 void c_step(Roomba* env) {
+    float reward = -0.01f; // incentivize speed
+
     for (int i = 0; i < (env->dt / EPSILON_SECONDS); i++) {
         float left_wheel = env->actions[0] * env->speed * EPSILON_SECONDS;
         float right_wheel = env->actions[1] * env->speed * EPSILON_SECONDS;
@@ -147,14 +146,29 @@ void c_step(Roomba* env) {
         conditionally_cover(env, center_r + 1, center_c + 1);
     }
 
-    int progress = get_progress(env);
-    bool success = progress > COVERAGE_RESOLUTION*COVERAGE_RESOLUTION*0.9f;
-    bool death = env->x < ROBOT_RADIUS || env->x > (env->width - ROBOT_RADIUS) ||
-        env->y < ROBOT_RADIUS || env->y > (env->height - ROBOT_RADIUS) ||
-        env->tick == env->tick_limit;
+    if (env->x < ROBOT_RADIUS) {
+        env->x = ROBOT_RADIUS;
+        reward -= 0.1f;
+    }
+    if (env->x > (env->width - ROBOT_RADIUS)) {
+        env->x = env->width - ROBOT_RADIUS;
+        reward -= 0.1f;
+    }
+    if (env->y < ROBOT_RADIUS) {
+        env->y = ROBOT_RADIUS;
+        reward -= 0.1f;
+    }
+    if (env->y > (env->height - ROBOT_RADIUS)) {
+        env->y = env->height - ROBOT_RADIUS;
+        reward -= 0.1f;
+    }
 
-    int max_progress = get_max_progress(env);
-    float reward = (float)(progress - env->progress_prev) / max_progress * 0.5f;
+    int progress = get_progress(env);
+    int max_progress = 5;
+    reward += (float)(progress - env->progress_prev) / max_progress * 0.5f;
+
+    bool success = progress > COVERAGE_RESOLUTION*COVERAGE_RESOLUTION*0.9f;
+    bool death = env->tick == env->tick_limit;
     if (success) {
         reward += 1.0f;
         env->log.perf += 1;
@@ -162,7 +176,6 @@ void c_step(Roomba* env) {
     if (death) {
         reward -= 1.0f;
     }
-    reward -= 0.01f; // incentivize speed
     env->rewards[0] = reward;
 
     if (success || death) {
