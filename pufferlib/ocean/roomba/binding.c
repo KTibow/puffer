@@ -10,6 +10,7 @@ static int my_init(Env *env, PyObject *args, PyObject *kwargs) {
   env->dt = unpack(kwargs, "dt");
   env->tick_limit = unpack(kwargs, "tick_limit");
   env->wheel_base = unpack(kwargs, "wheel_base");
+  env->diverse_resets = unpack(kwargs, "diverse_resets");
   return 0;
 }
 

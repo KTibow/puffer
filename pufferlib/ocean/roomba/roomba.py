@@ -21,7 +21,7 @@ OBS_COVERAGE_OFFSET = 11
 SUCCESS_COVERAGE = 0.90
 EPISODE_SECONDS = 80
 TICK_LIMIT = int(EPISODE_SECONDS / DT)
-WHEEL_BASE = 235  # Unused by coverage dynamics; kept for ABI compatibility.
+WHEEL_BASE = 235
 
 def _decode_pose(obs):
     x = float(obs[0]) * WIDTH
@@ -39,19 +39,34 @@ def _decode_nearest_pointer(obs, slot=0):
     return distance, cos_rel, sin_rel
 
 
-def _direction_to_action(dx, dy):
-    distance = math.hypot(dx, dy)
+def _wrap_angle(angle):
+    return (angle + math.pi) % (2 * math.pi) - math.pi
+
+
+def _wheel_controller(distance, angle_error):
     if distance < 1e-6:
         return np.zeros((1, 2), dtype=np.float32)
 
-    scale = min(1.0, distance / (SPEED * DT))
-    return np.array([[dx / distance * scale, dy / distance * scale]], dtype=np.float32)
+    turn = np.clip(angle_error / (math.pi / 3.0), -1.0, 1.0)
+    if abs(angle_error) > math.pi / 5.0:
+        forward = 0.0
+    else:
+        forward = np.clip(
+            (distance - COVERAGE_RADIUS * 0.35) / (SPEED * DT * 3.0), 0.0, 1.0
+        )
+        forward *= max(0.0, 1.0 - abs(angle_error) / (math.pi / 2.0))
+
+    left = np.clip(forward + turn, -1.0, 1.0)
+    right = np.clip(forward - turn, -1.0, 1.0)
+    return np.array([[left, right]], dtype=np.float32)
 
 
-def _steer_to_target(x, y, target_x, target_y):
+def _steer_to_target(x, y, bearing, target_x, target_y):
     dx = target_x - x
     dy = target_y - y
-    return _direction_to_action(dx, dy)
+    distance = math.hypot(dx, dy)
+    angle_error = _wrap_angle(math.atan2(dy, dx) - bearing)
+    return _wheel_controller(distance, angle_error)
 
 
 class NearestDotBaseline:
@@ -60,15 +75,13 @@ class NearestDotBaseline:
 
     def act(self, observations):
         obs = observations[0]
-        x, y, bearing = _decode_pose(obs)
+        _x, _y, _bearing = _decode_pose(obs)
         distance, cos_rel, sin_rel = _decode_nearest_pointer(obs, slot=0)
         if distance <= 1e-6:
             return np.zeros((1, 2), dtype=np.float32)
 
-        target_bearing = bearing + math.atan2(sin_rel, cos_rel)
-        dx = math.cos(target_bearing) * distance
-        dy = math.sin(target_bearing) * distance
-        return _direction_to_action(dx, dy)
+        angle_error = math.atan2(sin_rel, cos_rel)
+        return _wheel_controller(distance, angle_error)
 
 
 class BoustrophedonBaseline:
@@ -101,7 +114,7 @@ class BoustrophedonBaseline:
 
     def act(self, observations):
         obs = observations[0]
-        x, y, _bearing = _decode_pose(obs)
+        x, y, bearing = _decode_pose(obs)
 
         while self.waypoint_idx < len(self.waypoints):
             target_x, target_y = self.waypoints[self.waypoint_idx]
@@ -118,11 +131,11 @@ class BoustrophedonBaseline:
             return self.cleanup.act(observations)
 
         target_x, target_y = self.waypoints[self.waypoint_idx]
-        return _steer_to_target(x, y, target_x, target_y)
+        return _steer_to_target(x, y, bearing, target_x, target_y)
 
 
-def evaluate_baseline(agent, episodes=10, seed=0):
-    env = Roomba(num_envs=1, seed=seed)
+def evaluate_baseline(agent, episodes=10, seed=0, diverse_resets=False):
+    env = Roomba(num_envs=1, seed=seed, diverse_resets=diverse_resets)
     observations, _ = env.reset(seed=seed)
     if hasattr(agent, "reset"):
         agent.reset()
@@ -156,7 +169,13 @@ BASELINES = {
 
 class Roomba(pufferlib.PufferEnv):
     def __init__(
-        self, num_envs=1, render_mode=None, log_interval=128, buf=None, seed=0
+        self,
+        num_envs=1,
+        render_mode=None,
+        log_interval=128,
+        buf=None,
+        seed=0,
+        diverse_resets=True,
     ):
         self.single_observation_space = gymnasium.spaces.Box(
             low=0,
@@ -185,6 +204,7 @@ class Roomba(pufferlib.PufferEnv):
             dt=DT,
             tick_limit=TICK_LIMIT,
             wheel_base=WHEEL_BASE,
+            diverse_resets=int(diverse_resets),
         )
 
     def reset(self, seed=0):
