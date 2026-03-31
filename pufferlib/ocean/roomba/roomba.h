@@ -81,10 +81,9 @@ int calculate_bumper_distance(Roomba* env, float relative_angle) {
 }
 
 void update_obs(Roomba* env, int progress) {
-    env->observations[0] = (float)calculate_bumper_distance(env, -0.22f*PI) / 50; // left bumper
-    env->observations[1] = (float)calculate_bumper_distance(env, 0) / 50;
-    env->observations[2] = (float)calculate_bumper_distance(env, 0.35f*PI) / 50; // right bumper
-    env->observations[3] = (float)progress / (COVERAGE_RESOLUTION*COVERAGE_RESOLUTION);
+    env->observations[0] = env->x / env->width;
+    env->observations[1] = env->y / env->height;
+    env->observations[2] = (float)progress / (COVERAGE_RESOLUTION*COVERAGE_RESOLUTION);
 }
 int get_progress(Roomba* env) {
     int progress = 0;
