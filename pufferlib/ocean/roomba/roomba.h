@@ -83,7 +83,9 @@ int calculate_bumper_distance(Roomba* env, float relative_angle) {
 void update_obs(Roomba* env, int progress) {
     env->observations[0] = env->x / env->width;
     env->observations[1] = env->y / env->height;
-    env->observations[2] = (float)progress / (COVERAGE_RESOLUTION*COVERAGE_RESOLUTION);
+    env->observations[2] = 0.5 + sinf(env->bearing)*0.5;
+    env->observations[3] = 0.5 + cosf(env->bearing)*0.5;
+    env->observations[4] = (float)progress / (COVERAGE_RESOLUTION*COVERAGE_RESOLUTION);
 }
 int get_progress(Roomba* env) {
     int progress = 0;
@@ -101,9 +103,27 @@ void c_reset(Roomba* env) {
             env->coverage[r][c] = false;
         }
     }
-    env->x = GetRandomValue(ROBOT_RADIUS, env->width - ROBOT_RADIUS);
-    env->y = GetRandomValue(ROBOT_RADIUS, env->height - ROBOT_RADIUS);
-    env->bearing = 0;
+    env->coverage[0][0] = true;
+    env->coverage[0][1] = true;
+    env->coverage[1][0] = true;
+    env->coverage[0][COVERAGE_RESOLUTION - 1] = true;
+    env->coverage[0][COVERAGE_RESOLUTION - 2] = true;
+    env->coverage[1][COVERAGE_RESOLUTION - 1] = true;
+    env->coverage[COVERAGE_RESOLUTION - 1][0] = true;
+    env->coverage[COVERAGE_RESOLUTION - 1][1] = true;
+    env->coverage[COVERAGE_RESOLUTION - 2][0] = true;
+    env->coverage[COVERAGE_RESOLUTION - 1][COVERAGE_RESOLUTION - 1] = true;
+    env->coverage[COVERAGE_RESOLUTION - 1][COVERAGE_RESOLUTION - 2] = true;
+    env->coverage[COVERAGE_RESOLUTION - 2][COVERAGE_RESOLUTION - 1] = true;
+    int startC = GetRandomValue(floorf(ROBOT_RADIUS / env->width * COVERAGE_RESOLUTION), COVERAGE_RESOLUTION);
+    for (int r = 0; r < COVERAGE_RESOLUTION; r++) {
+        for (int c = 0; c <= startC; c++) {
+            env->coverage[r][c] = true;
+        }
+    }
+    env->x = (float)startC / COVERAGE_RESOLUTION * env->width;
+    env->y = ROBOT_RADIUS + 60;
+    env->bearing = PI/2;
     env->tick = 0;
     int progress = get_progress(env);
     env->progress_prev = progress;
@@ -113,6 +133,14 @@ void c_reset(Roomba* env) {
 void c_step(Roomba* env) {
     float reward = -0.01f; // incentivize speed
 
+    env->actions[0] = 1;
+    env->actions[1] = 1;
+    if (env->y < ROBOT_RADIUS+60 && env->bearing < PI/2) {
+        env->actions[1] = -0.5;
+    }
+    if (env->y > env->height - (ROBOT_RADIUS+60) && env->bearing > -PI/2) {
+        env->actions[0] = -0.5;
+    }
     for (int i = 0; i < (env->dt / EPSILON_SECONDS); i++) {
         float left_wheel = env->actions[0] * env->speed * EPSILON_SECONDS;
         float right_wheel = env->actions[1] * env->speed * EPSILON_SECONDS;
@@ -125,8 +153,8 @@ void c_step(Roomba* env) {
         env->bearing += angular_displacement;
         wrap_around_angle(&env->bearing);
 
-        int center_r = roundf(COVERAGE_RESOLUTION * (env->y/env->height));
-        int center_c = roundf(COVERAGE_RESOLUTION * (env->x/env->width));
+        int center_r = floorf(COVERAGE_RESOLUTION * (env->y/env->height));
+        int center_c = floorf(COVERAGE_RESOLUTION * (env->x/env->width));
         conditionally_cover(env, center_r, center_c);
         conditionally_cover(env, center_r - 3, center_c);
         conditionally_cover(env, center_r - 2, center_c);
@@ -218,7 +246,7 @@ void c_render(Roomba* env) {
     }
     DrawCircle(env->x, env->y, ROBOT_RADIUS, PUFF_CYAN);
     DrawLine(env->x, env->y, env->x + ROBOT_RADIUS * cosf(env->bearing), env->y + ROBOT_RADIUS * sinf(env->bearing), PUFF_ON_CYAN);
-    DrawTextEx(monaspace, TextFormat("L%+.2f R%+.2f", env->actions[0], env->actions[1]), (Vector2){0,0}, 20, 0, PUFF_CYAN);
+    DrawTextEx(monaspace, TextFormat("L%+.2f R%+.2f bearing=%+.2f", env->actions[0], env->actions[1], env->bearing), (Vector2){0,0}, 20, 0, PUFF_CYAN);
 
     EndDrawing();
 }
