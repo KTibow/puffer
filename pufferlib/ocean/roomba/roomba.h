@@ -26,6 +26,7 @@ Font monaspace;
 typedef struct {
     float perf;
     float coverage;
+    float total_reward;
     float n; // Required as the last field
 } Log;
 
@@ -81,11 +82,13 @@ int calculate_bumper_distance(Roomba* env, float relative_angle) {
 }
 
 void update_obs(Roomba* env, int progress) {
-    env->observations[0] = env->x / env->width;
-    env->observations[1] = env->y / env->height;
-    env->observations[2] = 0.5 + sinf(env->bearing)*0.5;
-    env->observations[3] = 0.5 + cosf(env->bearing)*0.5;
-    env->observations[4] = (float)progress / (COVERAGE_RESOLUTION*COVERAGE_RESOLUTION);
+    // env->observations[0] = env->x / env->width;
+    // env->observations[1] = env->y / env->height;
+    // env->observations[2] = 0.5 + sinf(env->bearing)*0.5;
+    // env->observations[3] = 0.5 + cosf(env->bearing)*0.5;
+    // env->observations[4] = (float)progress / (COVERAGE_RESOLUTION*COVERAGE_RESOLUTION);
+    env->observations[0] = (env->y < ROBOT_RADIUS+60 && env->bearing < PI/2) ? 1 : 0;
+    env->observations[1] = (env->y > env->height - (ROBOT_RADIUS+60) && env->bearing > -PI/2) ? 1 : 0;
 }
 int get_progress(Roomba* env) {
     int progress = 0;
@@ -133,14 +136,14 @@ void c_reset(Roomba* env) {
 void c_step(Roomba* env) {
     float reward = -0.01f; // incentivize speed
 
-    env->actions[0] = 1;
-    env->actions[1] = 1;
-    if (env->y < ROBOT_RADIUS+60 && env->bearing < PI/2) {
-        env->actions[1] = -0.5;
-    }
-    if (env->y > env->height - (ROBOT_RADIUS+60) && env->bearing > -PI/2) {
-        env->actions[0] = -0.5;
-    }
+    // env->actions[0] = 1;
+    // env->actions[1] = 1;
+    // if (env->y < ROBOT_RADIUS+60 && env->bearing < PI/2) {
+    //     env->actions[1] = -0.5;
+    // }
+    // if (env->y > env->height - (ROBOT_RADIUS+60) && env->bearing > -PI/2) {
+    //     env->actions[0] = -0.5;
+    // }
     for (int i = 0; i < (env->dt / EPSILON_SECONDS); i++) {
         float left_wheel = env->actions[0] * env->speed * EPSILON_SECONDS;
         float right_wheel = env->actions[1] * env->speed * EPSILON_SECONDS;
@@ -205,6 +208,7 @@ void c_step(Roomba* env) {
         reward -= 1.0f;
     }
     env->rewards[0] = reward;
+    env->log.total_reward += reward;
 
     if (success || death) {
         c_reset(env);
