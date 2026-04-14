@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <stdint.h>
 #include "raylib.h"
 
 #define PUFF_RED (Color){250, 116, 111, 255}
@@ -32,8 +32,8 @@ typedef struct {
 
 typedef struct {
     Log log;                     // Required field
-    float* observations;         // Required field. Ensure type matches in .py and .c
-    float* actions;              // Required field. Ensure type matches in .py and .c
+    int8_t* observations;        // Required field. Ensure type matches in .py and .c
+    int8_t* actions;             // Required field. Ensure type matches in .py and .c
     float* rewards;              // Required field
     unsigned char* terminals;    // Required field
 
@@ -89,6 +89,7 @@ void update_obs(Roomba* env, int progress) {
     // env->observations[4] = (float)progress / (COVERAGE_RESOLUTION*COVERAGE_RESOLUTION);
     env->observations[0] = (env->y < ROBOT_RADIUS+60 && env->bearing < PI/2) ? 1 : 0;
     env->observations[1] = (env->y > env->height - (ROBOT_RADIUS+60) && env->bearing > -PI/2) ? 1 : 0;
+    env->observations[2] = !env->observations[0] && !env->observations[1];
 }
 int get_progress(Roomba* env) {
     int progress = 0;
@@ -144,12 +145,21 @@ void c_step(Roomba* env) {
     // if (env->y > env->height - (ROBOT_RADIUS+60) && env->bearing > -PI/2) {
     //     env->actions[0] = -0.5;
     // }
+    float left_action = 1;
+    float right_action = 1;
+    if (env->actions[0] == 1) {
+        right_action = -0.9;
+    }
+    if (env->actions[0] == 2) {
+        left_action = -0.9;
+    }
     for (int i = 0; i < (env->dt / EPSILON_SECONDS); i++) {
-        float left_wheel = env->actions[0] * env->speed * EPSILON_SECONDS;
-        float right_wheel = env->actions[1] * env->speed * EPSILON_SECONDS;
+        float left_wheel = left_action * env->speed * EPSILON_SECONDS;
+        float right_wheel = right_action * env->speed * EPSILON_SECONDS;
 
         float linear_displacement = (left_wheel + right_wheel) / 2.0f;
         float angular_displacement = (left_wheel - right_wheel) / env->wheel_base;
+        // printf("%f", angular_displacement);
 
         env->x += linear_displacement * cosf(env->bearing);
         env->y += linear_displacement * sinf(env->bearing);
@@ -250,7 +260,7 @@ void c_render(Roomba* env) {
     }
     DrawCircle(env->x, env->y, ROBOT_RADIUS, PUFF_CYAN);
     DrawLine(env->x, env->y, env->x + ROBOT_RADIUS * cosf(env->bearing), env->y + ROBOT_RADIUS * sinf(env->bearing), PUFF_ON_CYAN);
-    DrawTextEx(monaspace, TextFormat("L%+.2f R%+.2f bearing=%+.2f", env->actions[0], env->actions[1], env->bearing), (Vector2){0,0}, 20, 0, PUFF_CYAN);
+    DrawTextEx(monaspace, TextFormat("%d bearing=%+.2f", env->actions[0], env->bearing), (Vector2){0,0}, 20, 0, PUFF_CYAN);
 
     EndDrawing();
 }
