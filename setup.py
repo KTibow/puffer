@@ -342,6 +342,7 @@ if not NO_TRAIN:
         'heavyball>=2.2.0',  # contains relevant fixes compared to 1.7.2 and 2.1.1
         'neptune',
         'wandb',
+        'trackio',
     ]
 
 setup(

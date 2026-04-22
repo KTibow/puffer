@@ -1003,42 +1003,57 @@ class NeptuneLogger:
 
 class WandbLogger:
     def __init__(self, args, load_id=None, resume='allow'):
-        import wandb
+        import trackio
 
-        wandb.init(
-            id=load_id or wandb.util.generate_id(),
+        self.trackio = trackio
+
+        self.run = trackio.init(
             project=args['wandb_project'],
+            name=load_id,  # trackio.init uses 'name' as the unique run identifier.
             group=args['wandb_group'],
-            allow_val_change=True,
-            save_code=False,
-            resume=resume,
             config=args,
-            tags=[args['tag']] if args['tag'] is not None else [],
-            settings=wandb.Settings(console='off'),  # stop sending dashboard to wandb
+            resume=resume,
         )
-        self.wandb = wandb
-        self.run_id = wandb.run.id
-        self.should_upload_model = not args['no_model_upload']
+
+        self.run_id = self.run.name
+        self.project = args['wandb_project']
+        self.should_upload_model = not args.get('no_model_upload', False)
 
     def log(self, logs, step):
-        self.wandb.log(logs, step=step)
+        self.trackio.log(logs, step=step)
 
     def upload_model(self, model_path):
-        artifact = self.wandb.Artifact(self.run_id, type='model')
-        artifact.add_file(model_path)
-        self.wandb.run.log_artifact(artifact)
+        self.trackio.save(model_path)
 
     def close(self, model_path, early_stop):
-        self.wandb.run.summary['early_stop'] = early_stop
+        self.trackio.log({'early_stop': early_stop})
         if self.should_upload_model:
             self.upload_model(model_path)
-        self.wandb.finish()
+        self.trackio.finish()
 
     def download(self):
-        artifact = self.wandb.use_artifact(f'{self.run_id}:latest')
-        data_dir = artifact.download()
-        model_file = max(os.listdir(data_dir))
-        return f'{data_dir}/{model_file}'
+        from trackio.utils import MEDIA_DIR
+
+        data_dir = MEDIA_DIR / self.project / self.run_id / 'files'
+
+        # Fallback to project-level files directory if run directory doesn't exist
+        if not data_dir.exists():
+            data_dir = MEDIA_DIR / self.project / 'files'
+
+        if not data_dir.exists() or not os.listdir(data_dir):
+            raise FileNotFoundError(
+                f'No files found for run {self.run_id} in {data_dir}'
+            )
+
+        full_paths = [os.path.join(data_dir, f) for f in os.listdir(data_dir)]
+        # Filter for files only and pick the most recently modified
+        files = [f for f in full_paths if os.path.isfile(f)]
+
+        if not files:
+            raise FileNotFoundError(f'No model files found in {data_dir}')
+
+        model_file = max(files, key=os.path.getmtime)
+        return str(model_file)
 
 
 def train(
