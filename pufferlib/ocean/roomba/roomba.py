@@ -17,7 +17,7 @@ class Roomba(pufferlib.PufferEnv):
         self, num_envs=1, render_mode=None, log_interval=128, buf=None, seed=0
     ):
         self.single_observation_space = gymnasium.spaces.Box(
-            low=0, high=1, shape=(3,), dtype=np.int8
+            low=-1, high=1, shape=(4,), dtype=np.float32
         )
         self.single_action_space = gymnasium.spaces.Discrete(3, dtype=np.int8)
         self.render_mode = render_mode

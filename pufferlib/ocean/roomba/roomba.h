@@ -32,7 +32,7 @@ typedef struct {
 
 typedef struct {
     Log log;                     // Required field
-    int8_t* observations;        // Required field. Ensure type matches in .py and .c
+    float* observations;         // Required field. Ensure type matches in .py and .c
     int8_t* actions;             // Required field. Ensure type matches in .py and .c
     float* rewards;              // Required field
     unsigned char* terminals;    // Required field
@@ -82,14 +82,10 @@ int calculate_bumper_distance(Roomba* env, float relative_angle) {
 }
 
 void update_obs(Roomba* env, int progress) {
-    // env->observations[0] = env->x / env->width;
-    // env->observations[1] = env->y / env->height;
-    // env->observations[2] = 0.5 + sinf(env->bearing)*0.5;
-    // env->observations[3] = 0.5 + cosf(env->bearing)*0.5;
-    // env->observations[4] = (float)progress / (COVERAGE_RESOLUTION*COVERAGE_RESOLUTION);
-    env->observations[0] = (env->y < ROBOT_RADIUS+60 && env->bearing < PI/2) ? 1 : 0;
-    env->observations[1] = (env->y > env->height - (ROBOT_RADIUS+60) && env->bearing > -PI/2) ? 1 : 0;
-    env->observations[2] = !env->observations[0] && !env->observations[1];
+    env->observations[0] = env->x / env->width;
+    env->observations[1] = env->y / env->height;
+    env->observations[2] = sinf(env->bearing);
+    env->observations[3] = cosf(env->bearing);
 }
 int get_progress(Roomba* env) {
     int progress = 0;
