@@ -115,7 +115,7 @@ void c_reset(Roomba* env) {
     env->coverage[COVERAGE_RESOLUTION - 1][COVERAGE_RESOLUTION - 1] = true;
     env->coverage[COVERAGE_RESOLUTION - 1][COVERAGE_RESOLUTION - 2] = true;
     env->coverage[COVERAGE_RESOLUTION - 2][COVERAGE_RESOLUTION - 1] = true;
-    int startC = GetRandomValue(floorf(ROBOT_RADIUS / env->width * COVERAGE_RESOLUTION), COVERAGE_RESOLUTION);
+    int startC = GetRandomValue(0, COVERAGE_RESOLUTION / 2);
     for (int r = 0; r < COVERAGE_RESOLUTION; r++) {
         for (int c = 0; c <= startC; c++) {
             env->coverage[r][c] = true;
