@@ -25,6 +25,7 @@ dependencies = [
     "scikit-learn",
     "wandb",
     "pybind11",
+    "imageio>=2.37.3",
 ]
 
 [project.scripts]

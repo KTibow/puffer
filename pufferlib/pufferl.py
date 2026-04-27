@@ -421,9 +421,31 @@ def eval(env_name, args=None, load_path=None):
         backend.load_weights(pufferl, load_path)
         print(f'Loaded weights from {load_path}')
 
-    while True:
-        backend.render(pufferl, 0)
-        backend.rollouts(pufferl)
+    save_frames = args.get('save_frames', 0)
+    gif_path = args.get('gif_path', 'eval.gif')
+    fps = args.get('fps', 15)
+
+    if save_frames > 0 and hasattr(pufferl._vec, 'get_frame'):
+        import imageio
+        frames = []
+        print(f'Recording {save_frames} frames for {gif_path}...')
+        for i in range(save_frames):
+            backend.render(pufferl, 0)
+            frame_bytes = pufferl._vec.get_frame()
+            if frame_bytes:
+                h, w, _ = pufferl._vec.get_frame_shape()
+                frame = np.frombuffer(frame_bytes, dtype=np.uint8).reshape(h, w, 4)[:, :, :3]
+                frames.append(frame.copy())
+            backend.rollouts(pufferl)
+            if (i + 1) % 100 == 0:
+                print(f'  Captured {i + 1}/{save_frames} frames')
+
+        imageio.mimsave(gif_path, frames, fps=fps, loop=0)
+        print(f'Saved {len(frames)} frames to {gif_path}')
+    else:
+        while True:
+            backend.render(pufferl, 0)
+            backend.rollouts(pufferl)
 
     backend.close(pufferl)
 

@@ -9,6 +9,7 @@
 
 // vecenv.h header section gives us StaticVec, Dict, cudaStream_t typedef
 #include "vecenv.h"
+#include "raylib.h"
 
 namespace py = pybind11;
 
@@ -156,6 +157,22 @@ static void vec_close(VecEnv& ve) {
     ve.vec = nullptr;
 }
 
+static py::bytes get_frame() {
+    Image img = LoadImageFromScreen();
+    if (!img.data || img.width <= 0 || img.height <= 0) {
+        if (img.data) UnloadImage(img);
+        return py::bytes();
+    }
+    int size = img.width * img.height * 4;
+    py::bytes result(static_cast<const char*>(img.data), size);
+    UnloadImage(img);
+    return result;
+}
+
+static py::tuple get_frame_shape() {
+    return py::make_tuple(GetRenderHeight(), GetRenderWidth(), 4);
+}
+
 // ============================================================================
 // Module
 // ============================================================================
@@ -182,6 +199,8 @@ PYBIND11_MODULE(_C, m) {
         .def("reset", &vec_reset)
         .def("cpu_step", &cpu_vec_step_py)
         .def("render", [](VecEnv& ve, int env_id) { static_vec_render(ve.vec, env_id); })
+        .def("get_frame", [](VecEnv&) { return get_frame(); })
+        .def("get_frame_shape", [](VecEnv&) { return get_frame_shape(); })
         .def("log", &vec_log)
         .def("close", &vec_close);
 }

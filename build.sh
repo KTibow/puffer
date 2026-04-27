@@ -2,7 +2,8 @@
 set -e
 
 # Usage:
-#   ./build.sh breakout              # Build _C.so with breakout statically linked
+#   ./build.sh breakout              # Build _C.so (CUDA + desktop raylib)
+#   ./build.sh breakout --gif        # Build _C.so (CPU + memory raylib, headless GIF export)
 #   ./build.sh breakout --float      # float32 precision (required for --slowly)
 #   ./build.sh breakout --cpu        # CPU fallback, torch only
 #   ./build.sh breakout --debug      # Debug build
@@ -13,7 +14,7 @@ set -e
 #   ./build.sh all                   # Build all envs with default and --float
 
 if [ -z "$1" ]; then
-    echo "Usage: ./build.sh ENV_NAME [--float] [--debug] [--local|--fast|--web|--profile|--cpu|--all]"
+    echo "Usage: ./build.sh ENV_NAME [--float] [--debug] [--local|--fast|--web|--profile|--cpu|--gif|--all]"
     exit 1
 fi
 ENV=$1
@@ -28,6 +29,7 @@ for arg in "$@"; do
         --web)   MODE=web ;;
         --profile) MODE=profile ;;
         --cpu)   MODE=cpu; PRECISION="-DPRECISION_FLOAT" ;;
+        --gif)   MODE=gif ;;
         *) echo "Error: unknown argument '$arg'" && exit 1 ;;
     esac
 done
@@ -50,16 +52,21 @@ if [ "$ENV" = "all" ]; then
     exit 0
 fi
 
-# Linux/mac
+# Platform detection
 PLATFORM="$(uname -s)"
+MACHINE=$(uname -m)
 if [ "$PLATFORM" = "Linux" ]; then
-    RAYLIB_NAME='raylib-5.5_linux_amd64'
+    if [ "$MACHINE" = "aarch64" ] || [ "$MACHINE" = "arm64" ]; then
+        RAYLIB_NAME='raylib-6.0_linux_arm64'
+    else
+        RAYLIB_NAME='raylib-6.0_linux_amd64'
+    fi
     OMP_LIB=-lomp5
     SANITIZE_FLAGS=(-fsanitize=address,undefined,bounds,pointer-overflow,leak -fno-omit-frame-pointer)
     STANDALONE_LDFLAGS=(-lGL)
     SHARED_LDFLAGS=(-Bsymbolic-functions)
 else
-    RAYLIB_NAME='raylib-5.5_macos'
+    RAYLIB_NAME='raylib-6.0_macos'
     OMP_LIB=-lomp
     SANITIZE_FLAGS=()
     STANDALONE_LDFLAGS=(-framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL)
@@ -86,17 +93,44 @@ download() {
     esac
 }
 
-RAYLIB_URL="https://github.com/raysan5/raylib/releases/download/5.5"
+# Download/build raylib
+RAYLIB_URL="https://github.com/raysan5/raylib/releases/download/6.0"
 if [ "$MODE" = "web" ]; then
-    RAYLIB_NAME='raylib-5.5_webassembly'
+    RAYLIB_NAME='raylib-6.0_webassembly'
     download "$RAYLIB_NAME" "$RAYLIB_URL/$RAYLIB_NAME.zip"
+    RAYLIB_A="$RAYLIB_NAME/lib/libraylib.a"
+elif [ "$MODE" = "gif" ]; then
+    # Build raylib 6.0 with PLATFORM_MEMORY (headless software renderer)
+    RL6_DIR="raylib-6.0_memory"
+    if [ ! -d "$RL6_DIR" ]; then
+        echo "Building raylib 6.0 with PLATFORM_MEMORY..."
+        TMPDIR=$(mktemp -d)
+        curl -sL "https://github.com/raysan5/raylib/archive/refs/tags/6.0.tar.gz" | tar xzf - -C "$TMPDIR"
+        cd "$TMPDIR/raylib-6.0/src"
+        for src in rcore rshapes rtextures rtext; do
+            ${CC:-gcc} -c -O2 -DNDEBUG -std=c99 -D_GNU_SOURCE -I. \
+                -DPLATFORM_MEMORY -DGRAPHICS_API_OPENGL_SOFTWARE \
+                -DSUPPORT_MODULE_RSHAPES=1 -DSUPPORT_MODULE_RTEXTURES=1 \
+                -DSUPPORT_MODULE_RTEXT=1 -DSUPPORT_MODULE_RMODELS=0 \
+                -DSUPPORT_MODULE_RAUDIO=0 \
+                -fPIC $src.c -o $src.o
+        done
+        ar rcs libraylib_memory.a rcore.o rshapes.o rtextures.o rtext.o
+        mkdir -p "$OLDPWD/$RL6_DIR/lib" "$OLDPWD/$RL6_DIR/include"
+        cp libraylib_memory.a "$OLDPWD/$RL6_DIR/lib/"
+        cp raylib.h raymath.h rlgl.h "$OLDPWD/$RL6_DIR/include/"
+        cd "$OLDPWD"
+        rm -rf "$TMPDIR"
+        echo "Built raylib 6.0 memory backend: $RL6_DIR/"
+    fi
+    RAYLIB_NAME="$RL6_DIR"
+    RAYLIB_A="$RL6_DIR/lib/libraylib_memory.a"
 else
     download "$RAYLIB_NAME" "$RAYLIB_URL/$RAYLIB_NAME.tar.gz"
+    RAYLIB_A="$RAYLIB_NAME/lib/libraylib.a"
 fi
 
-RAYLIB_A="$RAYLIB_NAME/lib/libraylib.a"
 INCLUDES=(-I./$RAYLIB_NAME/include -I./src -I./vendor)
-LINK_ARCHIVES=("$RAYLIB_A")
 EXTRA_SRC=""
 
 if [ "$ENV" = "constellation" ]; then
@@ -138,7 +172,7 @@ if [ "$MODE" = "local" ] || [ "$MODE" = "fast" ]; then
     FLAGS=(
         "${INCLUDES[@]}"
         "$SRC_DIR/$ENV.c" $EXTRA_SRC -o "$OUTPUT_NAME"
-        "${LINK_ARCHIVES[@]}"
+        "$RAYLIB_A"
         "${STANDALONE_LDFLAGS[@]}"
         -lm -lpthread -fopenmp
         -DPLATFORM_DESKTOP
@@ -154,7 +188,7 @@ elif [ "$MODE" = "web" ]; then
         -o "build/web/$ENV/game.html" \
         "$SRC_DIR/$ENV.c" $EXTRA_SRC \
         -O3 -Wall \
-        "${LINK_ARCHIVES[@]}" \
+        "$RAYLIB_A" \
         "${INCLUDES[@]}" \
         -L. -L./$RAYLIB_NAME/lib \
         -sASSERTIONS=2 -gsource-map \
@@ -205,7 +239,7 @@ if [ -z "$NCCL_IFLAG" ]; then
     NCCL_IFLAG=$(python -c "import nvidia.nccl, os; print('-I' + os.path.join(nvidia.nccl.__path__[0], 'include'))" 2>/dev/null || echo "")
 fi
 if [ -z "$NCCL_LFLAG" ]; then
-    NCCL_LFLAG=$(python -c "import nvidia.nccl, os; print('-L' + os.path.join(nvidia.nccl.__path__[0], 'lib'))" 2>/dev/null || echo "")
+    NCCL_LFLAG=$(python -c "import nvidia.nccl, os; print('-L' + os.path.join(nvidia.nccl.__path()[0], 'lib'))" 2>/dev/null || echo "")
 fi
 
 WHEEL_RPATH_FLAGS=()
@@ -238,15 +272,17 @@ if [ ! -f "$BINDING_SRC" ]; then
     exit 1
 fi
 
-echo "Compiling static library for $ENV..."
-${CC:-clang} -c "${CLANG_OPT[@]}" $EXTRA_CFLAGS \
-    -I. -Isrc -I$SRC_DIR -Ivendor \
-    -I./$RAYLIB_NAME/include -I$CUDA_HOME/include \
-    -DPLATFORM_DESKTOP \
-    -fno-semantic-interposition -fvisibility=hidden \
-    -fPIC -fopenmp \
-    "$BINDING_SRC" -o "$STATIC_OBJ"
-ar rcs "$STATIC_LIB" "$STATIC_OBJ"
+# Static library (env code) — skip if unchanged
+if [ ! -f "$STATIC_OBJ" ] || [ "$BINDING_SRC" -nt "$STATIC_OBJ" ] || [ "$SRC_DIR/$ENV.h" -nt "$STATIC_OBJ" ]; then
+    echo "Compiling static library for $ENV..."
+    ${CC:-clang} -c "${CLANG_OPT[@]}" $EXTRA_CFLAGS \
+        -I. -Isrc -I$SRC_DIR -Ivendor \
+        -I./$RAYLIB_NAME/include -I$CUDA_HOME/include \
+        -fno-semantic-interposition -fvisibility=hidden \
+        -fPIC -fopenmp \
+        "$BINDING_SRC" -o "$STATIC_OBJ"
+    ar rcs "$STATIC_LIB" "$STATIC_OBJ"
+fi
 
 # Brittle hack: have to extract the tensor type from the static lib to build trainer
 OBS_TENSOR_T=$(awk '/^#define OBS_TENSOR_T/{print $3}' "$BINDING_SRC")
@@ -255,34 +291,24 @@ if [ -z "$OBS_TENSOR_T" ]; then
     exit 1
 fi
 
-if [ -z "$MODE" ]; then
-    echo "Compiling CUDA ($ARCH) training backend..."
-    $NVCC -c -arch=$ARCH -Xcompiler -fPIC \
-        -Xcompiler=-D_GLIBCXX_USE_CXX11_ABI=1 \
-        -Xcompiler=-DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION \
-        -Xcompiler=-DPLATFORM_DESKTOP \
+if [ "$MODE" = "gif" ]; then
+    echo "Compiling GIF-export build (headless, CPU-only)..."
+    ${CXX:-g++} -c -fPIC -fopenmp \
+        -D_GLIBCXX_USE_CXX11_ABI=1 \
         -std=c++17 \
         -I. -Isrc \
-        -I$PYTHON_INCLUDE -I$PYBIND_INCLUDE -I$NUMPY_INCLUDE \
-        -I$CUDA_HOME/include $CUDNN_IFLAG $NCCL_IFLAG -I$RAYLIB_NAME/include \
-        -Xcompiler=-fopenmp \
+        -I./$RAYLIB_NAME/include \
+        -I$PYTHON_INCLUDE -I$PYBIND_INCLUDE \
         -DOBS_TENSOR_T=$OBS_TENSOR_T \
         -DENV_NAME=$ENV \
-        $PRECISION $NVCC_OPT \
-        src/bindings.cu -o build/bindings.o
-
-    LINK_CMD=(
-        ${CXX:-g++} -shared -fPIC -fopenmp
-        build/bindings.o "$STATIC_LIB" "$RAYLIB_A"
-        -L$CUDA_HOME/lib64 $CUDNN_LFLAG $NCCL_LFLAG
-        "${WHEEL_RPATH_FLAGS[@]}"
-        -lcudart -lnccl -lnvidia-ml -lcublas -lcusolver -lcurand -lcudnn
-        $OMP_LIB $LINK_OPT
-        "${SHARED_LDFLAGS[@]}"
+        $PRECISION $LINK_OPT \
+        src/bindings_cpu.cpp -o build/bindings_gif.o
+    ${CXX:-g++} -shared -fPIC -fopenmp \
+        build/bindings_gif.o "$STATIC_LIB" "$RAYLIB_A" \
+        -lm -lpthread $OMP_LIB $LINK_OPT \
+        "${SHARED_LDFLAGS[@]}" \
         -o "$OUTPUT"
-    )
-    "${LINK_CMD[@]}"
-    echo "Built: $OUTPUT"
+    echo "Built: $OUTPUT (GIF-export mode)"
 
 elif [ "$MODE" = "cpu" ]; then
     echo "Compiling CPU training backend..."
@@ -291,19 +317,17 @@ elif [ "$MODE" = "cpu" ]; then
         -DPLATFORM_DESKTOP \
         -std=c++17 \
         -I. -Isrc \
+        -I./$RAYLIB_NAME/include \
         -I$PYTHON_INCLUDE -I$PYBIND_INCLUDE \
         -DOBS_TENSOR_T=$OBS_TENSOR_T \
         -DENV_NAME=$ENV \
         $PRECISION $LINK_OPT \
         src/bindings_cpu.cpp -o build/bindings_cpu.o
-    LINK_CMD=(
-        ${CXX:-g++} -shared -fPIC -fopenmp
-        build/bindings_cpu.o "$STATIC_LIB" "$RAYLIB_A"
-        -lm -lpthread $OMP_LIB $LINK_OPT
-        "${SHARED_LDFLAGS[@]}"
+    ${CXX:-g++} -shared -fPIC -fopenmp \
+        build/bindings_cpu.o "$STATIC_LIB" "$RAYLIB_A" \
+        -lm -lpthread $OMP_LIB $LINK_OPT \
+        "${SHARED_LDFLAGS[@]}" \
         -o "$OUTPUT"
-    )
-    "${LINK_CMD[@]}"
     echo "Built: $OUTPUT"
 
 elif [ "$MODE" = "profile" ]; then
@@ -322,4 +346,30 @@ elif [ "$MODE" = "profile" ]; then
         -lGL -lm -lpthread $OMP_LIB \
         -o profile
     echo "Built: ./profile"
+
+else
+    echo "Compiling CUDA ($ARCH) training backend..."
+    $NVCC -c -arch=$ARCH -Xcompiler -fPIC \
+        -Xcompiler=-D_GLIBCXX_USE_CXX11_ABI=1 \
+        -Xcompiler=-DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION \
+        -Xcompiler=-DPLATFORM_DESKTOP \
+        -std=c++17 \
+        -I. -Isrc \
+        -I$PYTHON_INCLUDE -I$PYBIND_INCLUDE -I$NUMPY_INCLUDE \
+        -I$CUDA_HOME/include $CUDNN_IFLAG $NCCL_IFLAG -I$RAYLIB_NAME/include \
+        -Xcompiler=-fopenmp \
+        -DOBS_TENSOR_T=$OBS_TENSOR_T \
+        -DENV_NAME=$ENV \
+        $PRECISION $NVCC_OPT \
+        src/bindings.cu -o build/bindings.o
+
+    ${CXX:-g++} -shared -fPIC -fopenmp \
+        build/bindings.o "$STATIC_LIB" "$RAYLIB_A" \
+        -L$CUDA_HOME/lib64 $CUDNN_LFLAG $NCCL_LFLAG \
+        "${WHEEL_RPATH_FLAGS[@]}" \
+        -lcudart -lnccl -lnvidia-ml -lcublas -lcusolver -lcurand -lcudnn \
+        $OMP_LIB $LINK_OPT \
+        "${SHARED_LDFLAGS[@]}" \
+        -o "$OUTPUT"
+    echo "Built: $OUTPUT"
 fi

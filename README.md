@@ -7,6 +7,27 @@ PufferLib is a fast and sane reinforcement learning library that can train tiny,
 
 All of our documentation is hosted at [puffer.ai](https://puffer.ai "PufferLib Documentation"). @jsuarez5341 on [Discord](https://discord.gg/puffer) for support. Post there before opening issues. We're always looking for new contributors!
 
+## Instructions
+
+**Local (no GPU):**
+```bash
+uv run bash build.sh breakout --cpu                     # build _C.so
+uv run puffer train breakout --slowly  # train on CPU
+uv run bash build.sh breakout --gif                     # rebuild with headless renderer
+uv run puffer eval breakout --slowly --load-model-path latest --save-frames 300 --gif-path eval.gif
+```
+
+**Vast.ai container (GPU, headless):**
+```bash
+uv run bash build.sh breakout                          # build _C.so (CUDA)
+uv run puffer train breakout      # train on GPU
+uv run bash build.sh breakout --gif                    # rebuild with headless renderer
+uv run puffer eval breakout --slowly --load-model-path latest --save-frames 300 --gif-path eval.gif
+# scp eval.gif back to your machine
+```
+
+`--save-frames` controls frame count (default 300). Recording continues through episode terminations.
+
 ## Star to puff up the project!
 
 <a href="https://star-history.com/#pufferai/pufferlib&Date">
