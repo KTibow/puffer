@@ -64,7 +64,7 @@ if [ "$PLATFORM" = "Linux" ]; then
     OMP_LIB=-lomp5
     SANITIZE_FLAGS=(-fsanitize=address,undefined,bounds,pointer-overflow,leak -fno-omit-frame-pointer)
     STANDALONE_LDFLAGS=(-lGL)
-    SHARED_LDFLAGS=(-Bsymbolic-functions)
+    SHARED_LDFLAGS=(-Bsymbolic-functions -lX11 -lGL)
 else
     RAYLIB_NAME='raylib-6.0_macos'
     OMP_LIB=-lomp
