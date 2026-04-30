@@ -2,10 +2,9 @@
 set -e
 
 # Usage:
-#   ./build.sh breakout              # Build _C.so (CUDA + desktop raylib)
-#   ./build.sh breakout --gif        # Build _C.so (CPU + memory raylib, headless GIF export)
+#   ./build.sh breakout              # Build _C.so (CUDA + memory raylib, headless GIF export)
 #   ./build.sh breakout --float      # float32 precision (required for --slowly)
-#   ./build.sh breakout --cpu        # CPU fallback, torch only
+#   ./build.sh breakout --cpu        # CPU fallback + desktop raylib (window display)
 #   ./build.sh breakout --debug      # Debug build
 #   ./build.sh breakout --local      # Standalone executable (debug, sanitizers)
 #   ./build.sh breakout --fast       # Standalone executable (optimized)
@@ -14,7 +13,7 @@ set -e
 #   ./build.sh all                   # Build all envs with default and --float
 
 if [ -z "$1" ]; then
-    echo "Usage: ./build.sh ENV_NAME [--float] [--debug] [--local|--fast|--web|--profile|--cpu|--gif|--all]"
+    echo "Usage: ./build.sh ENV_NAME [--float] [--debug] [--local|--fast|--web|--profile|--cpu]"
     exit 1
 fi
 ENV=$1
@@ -29,7 +28,6 @@ for arg in "$@"; do
         --web)   MODE=web ;;
         --profile) MODE=profile ;;
         --cpu)   MODE=cpu; PRECISION="-DPRECISION_FLOAT" ;;
-        --gif)   MODE=gif ;;
         *) echo "Error: unknown argument '$arg'" && exit 1 ;;
     esac
 done
@@ -93,14 +91,18 @@ download() {
     esac
 }
 
-# Download/build raylib
+# raylib setup
 RAYLIB_URL="https://github.com/raysan5/raylib/releases/download/6.0"
 if [ "$MODE" = "web" ]; then
     RAYLIB_NAME='raylib-6.0_webassembly'
     download "$RAYLIB_NAME" "$RAYLIB_URL/$RAYLIB_NAME.zip"
     RAYLIB_A="$RAYLIB_NAME/lib/libraylib.a"
-elif [ "$MODE" = "gif" ]; then
-    # Build raylib 6.0 with PLATFORM_MEMORY (headless software renderer)
+elif [ "$MODE" = "local" ] || [ "$MODE" = "fast" ] || [ "$MODE" = "cpu" ]; then
+    # Desktop raylib for window display (standalone play / CPU eval)
+    download "$RAYLIB_NAME" "$RAYLIB_URL/$RAYLIB_NAME.tar.gz"
+    RAYLIB_A="$RAYLIB_NAME/lib/libraylib.a"
+else
+    # Memory raylib for headless rendering (CUDA training + GIF eval)
     RL6_DIR="raylib-6.0_memory"
     if [ ! -d "$RL6_DIR" ]; then
         echo "Building raylib 6.0 with PLATFORM_MEMORY..."
@@ -113,6 +115,7 @@ elif [ "$MODE" = "gif" ]; then
                 -DSUPPORT_MODULE_RSHAPES=1 -DSUPPORT_MODULE_RTEXTURES=1 \
                 -DSUPPORT_MODULE_RTEXT=1 -DSUPPORT_MODULE_RMODELS=0 \
                 -DSUPPORT_MODULE_RAUDIO=0 \
+                -DSUPPORT_CUSTOM_FRAME_CONTROL \
                 -fPIC $src.c -o $src.o
         done
         ar rcs libraylib_memory.a rcore.o rshapes.o rtextures.o rtext.o
@@ -125,9 +128,6 @@ elif [ "$MODE" = "gif" ]; then
     fi
     RAYLIB_NAME="$RL6_DIR"
     RAYLIB_A="$RL6_DIR/lib/libraylib_memory.a"
-else
-    download "$RAYLIB_NAME" "$RAYLIB_URL/$RAYLIB_NAME.tar.gz"
-    RAYLIB_A="$RAYLIB_NAME/lib/libraylib.a"
 fi
 
 INCLUDES=(-I./$RAYLIB_NAME/include -I./src -I./vendor)
@@ -291,26 +291,7 @@ if [ -z "$OBS_TENSOR_T" ]; then
     exit 1
 fi
 
-if [ "$MODE" = "gif" ]; then
-    echo "Compiling GIF-export build (headless, CPU-only)..."
-    ${CXX:-g++} -c -fPIC -fopenmp \
-        -D_GLIBCXX_USE_CXX11_ABI=1 \
-        -std=c++17 \
-        -I. -Isrc \
-        -I./$RAYLIB_NAME/include \
-        -I$PYTHON_INCLUDE -I$PYBIND_INCLUDE \
-        -DOBS_TENSOR_T=$OBS_TENSOR_T \
-        -DENV_NAME=$ENV \
-        $PRECISION $LINK_OPT \
-        src/bindings_cpu.cpp -o build/bindings_gif.o
-    ${CXX:-g++} -shared -fPIC -fopenmp \
-        build/bindings_gif.o "$STATIC_LIB" "$RAYLIB_A" \
-        -lm -lpthread $OMP_LIB $LINK_OPT \
-        "${SHARED_LDFLAGS[@]}" \
-        -o "$OUTPUT"
-    echo "Built: $OUTPUT (GIF-export mode)"
-
-elif [ "$MODE" = "cpu" ]; then
+if [ "$MODE" = "cpu" ]; then
     echo "Compiling CPU training backend..."
     ${CXX:-g++} -c -fPIC -fopenmp \
         -D_GLIBCXX_USE_CXX11_ABI=1 \
@@ -337,7 +318,6 @@ elif [ "$MODE" = "profile" ]; then
         -I$CUDA_HOME/include $CUDNN_IFLAG $NCCL_IFLAG -I$RAYLIB_NAME/include \
         -DOBS_TENSOR_T=$OBS_TENSOR_T \
         -DENV_NAME=$ENV \
-        -Xcompiler=-DPLATFORM_DESKTOP \
         $PRECISION \
         -Xcompiler=-fopenmp \
         tests/profile_kernels.cu vendor/ini.c \
@@ -352,7 +332,6 @@ else
     $NVCC -c -arch=$ARCH -Xcompiler -fPIC \
         -Xcompiler=-D_GLIBCXX_USE_CXX11_ABI=1 \
         -Xcompiler=-DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION \
-        -Xcompiler=-DPLATFORM_DESKTOP \
         -std=c++17 \
         -I. -Isrc \
         -I$PYTHON_INCLUDE -I$PYBIND_INCLUDE -I$NUMPY_INCLUDE \

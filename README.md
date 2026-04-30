@@ -11,18 +11,16 @@ All of our documentation is hosted at [puffer.ai](https://puffer.ai "PufferLib D
 
 **Local (no GPU):**
 ```bash
-uv run bash build.sh breakout --cpu                     # build _C.so
-uv run puffer train breakout --slowly  # train on CPU
-uv run bash build.sh breakout --gif                     # rebuild with headless renderer
-uv run puffer eval breakout --slowly --load-model-path latest --save-frames 300 --gif-path eval.gif
+uv run bash build.sh breakout --cpu                     # build _C.so (desktop raylib for window display)
+uv run puffer train breakout --slowly                    # train on CPU
+uv run puffer eval breakout --slowly --load-model-path latest
 ```
 
 **Vast.ai container (GPU, headless):**
 ```bash
-uv run bash build.sh breakout                          # build _C.so (CUDA)
-uv run puffer train breakout      # train on GPU
-uv run bash build.sh breakout --gif                    # rebuild with headless renderer
-uv run puffer eval breakout --slowly --load-model-path latest --save-frames 300 --gif-path eval.gif
+uv run bash build.sh breakout                          # build _C.so (CUDA + memory raylib, headless GIF export)
+uv run puffer train breakout                           # train on GPU
+uv run puffer eval breakout --load-model-path latest --save-frames 300 --gif-path eval.gif
 # scp eval.gif back to your machine
 ```
 

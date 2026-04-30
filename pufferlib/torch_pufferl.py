@@ -393,6 +393,12 @@ class PuffeRL:
     def render(self, env_id=0):
         self._vec.render(env_id)
 
+    def get_frame(self):
+        return self._vec.get_frame()
+
+    def get_frame_shape(self):
+        return self._vec.get_frame_shape()
+
     def close(self):
         self.vec_obs = None
         self.vec_rewards = None

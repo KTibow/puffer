@@ -2,6 +2,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include "raylib.h"
 #include "pufferlib.cu"
 
 #define _PUFFER_STRINGIFY(x) #x
@@ -566,5 +567,19 @@ PYBIND11_MODULE(_C, m) {
         .def_readonly("last_log_time", &PuffeRL::last_log_time)
         .def("num_params", [](PuffeRL& self) -> int64_t {
             return numel(self.master_weights.shape);
+        })
+        .def("get_frame", [](PuffeRL&) {
+            Image img = LoadImageFromScreen();
+            if (!img.data || img.width <= 0 || img.height <= 0) {
+                if (img.data) UnloadImage(img);
+                return py::bytes();
+            }
+            int size = img.width * img.height * 4;
+            py::bytes result(static_cast<const char*>(img.data), size);
+            UnloadImage(img);
+            return result;
+        })
+        .def("get_frame_shape", [](PuffeRL&) {
+            return py::make_tuple(GetRenderHeight(), GetRenderWidth(), 4);
         });
 }
