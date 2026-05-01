@@ -441,7 +441,7 @@ def eval(env_name, args=None, load_path=None):
             if (i + 1) % 100 == 0:
                 print(f'  Captured {i + 1}/{save_frames} frames')
 
-        imageio.mimsave(gif_path, frames, fps=fps, loop=0)
+        imageio.mimsave(gif_path, frames, fps=fps, loop=None)
         print(f'Saved {len(frames)} frames to {gif_path}')
     else:
         while True:
